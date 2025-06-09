@@ -58,7 +58,7 @@
         <div class="cart-header">
             <h1>Your Shopping Cart</h1>
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ url_for('display') }}" class="btn btn-outline-primary">Continue Shopping</a>
+                <a href="{{ url_for('home') }}" class="btn btn-outline-primary">Continue Shopping</a>
                 <span class="badge bg-primary">{{ cart.products|length }} items</span>
             </div>
         </div>
@@ -93,7 +93,7 @@
             <div class="empty-cart">
                 <h3>Your cart is empty</h3>
                 <p>Looks like you haven't added anything to your cart yet.</p>
-                <a href="{{ url_for('display') }}" class="btn btn-primary">Start Shopping</a>
+                <a href="{{ url_for('home') }}" class="btn btn-primary">Start Shopping</a>
             </div>
         {% endif %}
     </div>
@@ -120,3 +120,4 @@
     </style>
 </body>
 </html>
+
