@@ -1,0 +1,35 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+select,
+.form-select {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+h1 {
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+/* Better responsiveness on small screens */
+@media (max-width: 600px) {
+  body {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  select,
+  .form-select {
+    font-size: 1rem;
+  }
+}

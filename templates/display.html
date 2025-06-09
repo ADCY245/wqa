@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Select Product</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT+zDk0s5H7v3aVVl7wYX3qG"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <script src="{{ url_for('static', filename='js/selection.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Cart icon aligned right -->
+        <div style="text-align: right; margin-top: 10px; margin-bottom: 10px; position: relative;">
+            <a href="{{ url_for('cart') }}" style="position: relative; display: inline-block;">
+                <img src="{{ url_for('static', filename='images/cart-icon.png') }}" alt="Cart" style="width: 40px; height: 40px;" />
+                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+            </a>
+        </div>
+
+        <h1 class="mb-4">Select Product Type</h1>
+
+        <div class="mb-3">
+            <select id="productTypeSelect" class="form-select" onchange="if(this.value) window.location.href=this.value;">
+                <option value="">-- Select Type --</option>
+                <option value="{{ url_for('blankets') }}">Blanket</option>
+                <option value="{{ url_for('mpack') }}">Underpacking</option>
+            </select>
+        </div>
+    </div>
+</body>
+</html>
