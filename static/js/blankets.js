@@ -4,7 +4,7 @@ let currentDiscount = 0;
 let currentBarRate = 0;
 
 window.onload = () => {
-  fetch("{{ url_for('static', filename='data/machine.json') }}")
+  fetch("/blankets-data/machine.json")
     .then(res => res.json())
     .then(data => {
       machineData = data.machines;
@@ -21,7 +21,7 @@ window.onload = () => {
       });
     });
 
-  fetch("{{ url_for('static', filename='data/blankets.json') }}")
+  fetch("/blankets-data/blankets.json")
     .then(res => res.json())
     .then(data => {
       blanketData = data.products;
@@ -40,7 +40,7 @@ window.onload = () => {
       });
     });
 
-  fetch("{{ url_for('static', filename='data/bar.json') }}")
+  fetch("/blankets-data/bar.json")
     .then(res => res.json())
     .then(data => {
       barData = data.bars;
@@ -353,14 +353,8 @@ function addBlanketToCart() {
     added_at: new Date().toISOString()
   };
 
-  // Get the Add to Cart button
-  const addToCartBtn = document.querySelector('button[onclick="addBlanketToCart()"]');
-  if (!addToCartBtn) {
-    console.error('Add to Cart button not found');
-    return;
-  }
-  
   // Show loading state
+  const addToCartBtn = event.target;
   const originalText = addToCartBtn.innerHTML;
   addToCartBtn.disabled = true;
   addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
