@@ -68,16 +68,16 @@
                 {% for item in cart.products %}
                 <div class="cart-item">
                     <div class="item-details">
-                        <h5>{{ item.name }}</h5>
+                        <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
-                            <p>Blanket Type: {{ item.name }}</p>
-                            <p>Machine: {{ item.machine }}</p>
+                            <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
+                            <p>Machine: {{ item.machine or 'Unknown' }}</p>
                         {% elif item.type == 'mpack' %}
-                            <p>Thickness: {{ item.thickness }} micron</p>
+                            <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
                         {% endif %}
-                        <p>Dimensions: {{ item.length }} x {{ item.width }}</p>
-                        <div class="item-price">₹{{ "%.2f"|format(item.total_price) }}</div>
-                        <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                        <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }}</p>
+                        <div class="item-price">₹{{ "%.2f"|format(item.total_price or 0) }}</div>
+                        <div class="item-quantity">Quantity: {{ item.quantity or 1 }}</div>
                     </div>
                     <form action="{{ url_for('remove_from_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="{{ item.id }}">
