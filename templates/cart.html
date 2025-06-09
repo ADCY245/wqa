@@ -67,9 +67,15 @@
             <div class="cart-items">
                 {% for item in cart.products %}
                 <div class="cart-item">
-                    <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" style="width: 100px; height: 100px; object-fit: cover;">
                     <div class="item-details">
                         <h5>{{ item.name }}</h5>
+                        {% if item.type == 'blanket' %}
+                            <p>Blanket Type: {{ item.name }}</p>
+                            <p>Machine: {{ item.machine }}</p>
+                        {% elif item.type == 'mpack' %}
+                            <p>Thickness: {{ item.thickness }} micron</p>
+                        {% endif %}
+                        <p>Dimensions: {{ item.length }} x {{ item.width }}</p>
                         <div class="item-price">₹{{ "%.2f"|format(item.total_price) }}</div>
                         <div class="item-quantity">Quantity: {{ item.quantity }}</div>
                     </div>
@@ -120,4 +126,3 @@
     </style>
 </body>
 </html>
-
