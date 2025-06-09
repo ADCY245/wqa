@@ -39,6 +39,11 @@ def cart():
         cart_data = load_cart()
         print(f"Cart data: {cart_data}")  # Debug log
         
+        if cart_data is None:
+            print("Cart data is None, initializing empty cart")
+            cart_data = {"products": []}
+            save_cart(cart_data)
+        
         # Ensure products is a list
         if not isinstance(cart_data.get('products'), list):
             print("Products is not a list, initializing empty list")  # Debug log
@@ -60,9 +65,12 @@ def cart():
         return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
         
     except Exception as e:
+        import traceback
         print(f"Error in cart route: {str(e)}")
+        print("Full traceback:")
+        print(traceback.format_exc())
         # Return empty cart in case of error
-        return render_template('cart.html', cart={"products": []}, total=0)
+        return render_template('cart.html', cart={"products": []}, total=0), 500
 
 # ---------- STATIC FILE SERVING ---------- #
 
