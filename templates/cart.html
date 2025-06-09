@@ -57,7 +57,10 @@
     <div class="cart-container">
         <div class="cart-header">
             <h1>Your Shopping Cart</h1>
-            <a href="{{ url_for('display') }}" class="btn btn-outline-primary">Continue Shopping</a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('display') }}" class="btn btn-outline-primary">Continue Shopping</a>
+                <span class="badge bg-primary">{{ cart.products|length }} items</span>
+            </div>
         </div>
 
         {% if cart.products %}
