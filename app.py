@@ -34,9 +34,35 @@ def mpack():
 
 @app.route('/cart')
 def cart():
-    cart_data = load_cart()
-    total_price = sum(item['total_price'] for item in cart_data.get('products', []))
-    return render_template('cart.html', cart=cart_data, total=total_price)
+    try:
+        print("Loading cart data...")  # Debug log
+        cart_data = load_cart()
+        print(f"Cart data: {cart_data}")  # Debug log
+        
+        # Ensure products is a list
+        if not isinstance(cart_data.get('products'), list):
+            print("Products is not a list, initializing empty list")  # Debug log
+            cart_data['products'] = []
+            save_cart(cart_data)
+            
+        # Calculate total price safely
+        total_price = 0
+        for item in cart_data['products']:
+            try:
+                # Ensure total_price is a number
+                price = float(item.get('total_price', 0))
+                total_price += price
+            except (ValueError, TypeError) as e:
+                print(f"Error processing item price: {e}")
+                continue
+                
+        print(f"Calculated total price: {total_price}")  # Debug log
+        return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
+        
+    except Exception as e:
+        print(f"Error in cart route: {str(e)}")
+        # Return empty cart in case of error
+        return render_template('cart.html', cart={"products": []}, total=0)
 
 # ---------- STATIC FILE SERVING ---------- #
 
