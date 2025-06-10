@@ -50,13 +50,23 @@ def cart():
             cart_data['products'] = []
             save_cart(cart_data)
             
-        # Calculate total price safely
+        # Calculate total price safely including GST
         total_price = 0
         for item in cart_data['products']:
             try:
-                # Ensure total_price is a number
-                price = float(item.get('total_price', 0))
-                total_price += price
+                # Get the base price and GST percentage
+                base_price = float(item.get('total_price', 0))
+                gst_percent = float(item.get('gst_percent', 18))  # Default to 18% if not specified
+                
+                # Calculate GST amount
+                gst_amount = (base_price * gst_percent) / 100
+                
+                # Add base price + GST to total
+                total_price += base_price + gst_amount
+                
+                # Debug log
+                print(f"Item: {item.get('name', 'Unknown')}, Base: {base_price}, GST%: {gst_percent}, GST Amt: {gst_amount}, Total: {base_price + gst_amount}")
+                
             except (ValueError, TypeError) as e:
                 print(f"Error processing item price: {e}")
                 continue
