@@ -192,14 +192,18 @@
                                     <span>₹{{ "%.2f"|format(basePrice) }}</span>
                                 </div>
                                 
+                                <!-- Get bar data -->
+                                {% set selectedBar = barData|selectattr('name', 'equalto', item.bar_type)|first %}
+                                {% set barPrice = selectedBar.price if selectedBar else 0 %}
+                                
                                 <!-- Add barring price -->
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type or 'None' }}):</span>
-                                    <span>+₹{{ "%.2f"|format(item.bar_price or 0) }}</span>
+                                    <span>+₹{{ "%.2f"|format(barPrice) }}</span>
                                 </div>
                                 
                                 <!-- Calculate price with bar -->
-                                {% set priceWithBar = basePrice + (item.bar_price or 0) %}
+                                {% set priceWithBar = basePrice + barPrice %}
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Price per unit:</span>
                                     <span>₹{{ "%.2f"|format(priceWithBar) }}</span>
