@@ -435,7 +435,7 @@ function addBlanketToCart() {
   const finalUnitPrice = discountedPrice + gstAmount;
   const finalTotalPrice = finalUnitPrice * quantity;
 
-  // Create product object for cart with all calculated values
+  // Create product object with all calculated values
   const product = {
     id: 'blanket_' + Date.now(),
     type: 'blanket',
@@ -448,29 +448,31 @@ function addBlanketToCart() {
     bar_price: barPrice,
     quantity: quantity,
     
-    // Calculated values
-    ratePerSqMt: selectedBlanket.ratePerSqMt,
-    areaSqM: areaSqM,
-    basePrice: basePrice,
-    pricePerUnit: priceWithBar,
-    subtotal: priceWithBar * quantity,
-    discount_amount: discountAmount,
-    discounted_subtotal: discountedPrice * quantity,
-    gst_amount: gstAmount * quantity,
+    // Pre-calculated values for display
+    calculations: {
+      areaSqM: parseFloat(areaSqM.toFixed(4)),
+      ratePerSqMt: selectedBlanket.ratePerSqMt,
+      basePrice: parseFloat(basePrice.toFixed(2)),
+      pricePerUnit: parseFloat(priceWithBar.toFixed(2)),
+      subtotal: parseFloat((priceWithBar * quantity).toFixed(2)),
+      discount_percent: currentDiscount,
+      discount_amount: parseFloat(discountAmount.toFixed(2)),
+      discounted_subtotal: parseFloat((discountedPrice * quantity).toFixed(2)),
+      gst_percent: gstPercent,
+      gst_amount: parseFloat((gstAmount * quantity).toFixed(2)),
+      final_price: parseFloat(finalTotalPrice.toFixed(2))
+    },
     
-    // Final prices
-    unit_price: finalUnitPrice,
-    total_price: finalTotalPrice,
-    
-    // Rates
-    discount_percent: currentDiscount,
-    gst_percent: gstPercent,
+    // For backward compatibility
+    unit_price: parseFloat(finalUnitPrice.toFixed(2)),
+    total_price: parseFloat(finalTotalPrice.toFixed(2)),
     
     // Other
     image: 'images/products/blanket-placeholder.jpg',
-    added_at: new Date().toISOString(),
-    calculation_note: 'All prices include GST'
+    added_at: new Date().toISOString()
   };
+  
+  console.log('Adding to cart with pre-calculated values:', JSON.stringify(product, null, 2));
 
   // Show loading state
   const addToCartBtn = event.target;
