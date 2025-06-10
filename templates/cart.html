@@ -84,37 +84,37 @@
                             </div>
                             
                             <!-- Price Breakdown for Blankets -->
-                            {# Get the rate per square meter from the item data #}
-                            {% set rate_per_sq_mt = item.rate_per_sq_mt if 'rate_per_sq_mt' in item else (item.unit_price / ((item.length/1000) * (item.width/1000))) if item.length and item.width else item.unit_price %}
+                            {# Get rate per square meter from blanket data #}
+                            {% set rate_per_sq_mt = item.ratePerSqMt if 'ratePerSqMt' in item else (item.unit_price / ((item.length/1000) * (item.width/1000))) if item.length and item.width else 0 %}
                             
                             {# Calculate area in square meters #}
                             {% set area_sq_m = (item.length / 1000) * (item.width / 1000) %}
                             
-                            {# Calculate base price #}
+                            {# Calculate base price (matches blankets.js line 230) #}
                             {% set base_price = area_sq_m * rate_per_sq_mt %}
                             
-                            {# Get barring price from item data #}
-                            {% set barring_price = item.bar_price or 0 %}
+                            {# Get barring price (default to 0 if not set) #}
+                            {% set barring_price = item.bar_price | default(0) | float %}
                             
-                            {# Calculate price with barring #}
+                            {# Calculate price with barring (matches blankets.js line 243) #}
                             {% set price_per_unit = base_price + barring_price %}
                             
-                            {# Calculate total before discount #}
+                            {# Calculate total before discount (matches blankets.js line 261) #}
                             {% set subtotal_before_discount = price_per_unit * item.quantity %}
                             
-                            {# Apply discount #}
-                            {% set discount_percent = item.discount_percent or 0 %}
-                            {% set discount_amount = (subtotal_before_discount * discount_percent / 100) %}
+                            {# Apply discount (matches blankets.js line 429) #}
+                            {% set discount_percent = item.discount_percent | default(0) | float %}
+                            {% set discount_amount = (price_per_unit * discount_percent / 100) * item.quantity %}
                             {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
                             
-                            {# Calculate GST (18%) #}
+                            {# Calculate GST (18% on discounted amount) - matches blankets.js line 433 #}
                             {% set gst_percent = 18 %}
                             {% set gst_amount = (subtotal_after_discount * gst_percent / 100) %}
                             {% set final_total = subtotal_after_discount + gst_amount %}
                             
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
-                                    <span>Area: {{ "%.4f"|format(area_sq_m) }} m² × Rate (₹{{ "%.2f"|format(rate_per_sq_mt) }}/m²)</span>
+                                    <span>Area: {{ "%.4f"|format(area_sq_m) }} m² × ₹{{ "%.2f"|format(rate_per_sq_mt) }}/m²</span>
                                     <span>₹{{ "%.2f"|format(base_price) }}</span>
                                 </div>
                                 {% if barring_price > 0 %}
@@ -122,11 +122,11 @@
                                     <span>Barring ({{ item.bar_type or 'Barring' }})</span>
                                     <span>+₹{{ "%.2f"|format(barring_price) }}</span>
                                 </div>
-                                {% endif %}
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Price per unit:</span>
                                     <span>₹{{ "%.2f"|format(price_per_unit) }}</span>
                                 </div>
+                                {% endif %}
                                 <div class="d-flex justify-content-between">
                                     <span>Quantity:</span>
                                     <span>× {{ item.quantity }} units</span>
@@ -299,4 +299,5 @@
     </style>
 </body>
 </html>
+
 
