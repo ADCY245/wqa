@@ -72,12 +72,22 @@
                         {% if item.type == 'blanket' %}
                             <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
                             <p>Machine: {{ item.machine or 'Unknown' }}</p>
+                            <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }}</p>
                         {% elif item.type == 'mpack' %}
                             <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
+                            {% if item.size %}
+                                <p>Size: {{ item.size }}</p>
+                            {% endif %}
+                            {% if item.discount_percent and item.discount_percent > 0 %}
+                                <p>Discount: {{ item.discount_percent }}% (-₹{{ "%.2f"|format(item.discount_amount or 0) }})</p>
+                            {% endif %}
+                            <p>GST ({{ item.gst_percent or 12 }}%): ₹{{ "%.2f"|format(item.gst_amount or 0) }}</p>
                         {% endif %}
-                        <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }}</p>
                         <div class="item-price">₹{{ "%.2f"|format(item.total_price or 0) }}</div>
                         <div class="item-quantity">Quantity: {{ item.quantity or 1 }}</div>
+                        {% if item.unit_price %}
+                            <div class="unit-price">Unit Price: ₹{{ "%.2f"|format(item.unit_price or 0) }}</div>
+                        {% endif %}
                     </div>
                     <form action="{{ url_for('remove_from_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="{{ item.id }}">
@@ -126,3 +136,4 @@
     </style>
 </body>
 </html>
+
