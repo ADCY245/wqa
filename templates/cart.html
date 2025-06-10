@@ -104,12 +104,6 @@
                                     <span>GST ({{ item.gst_percent or 18 }}%):</span>
                                     <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
                                 </div>
-                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
-                                    <span>Final Amount:</span>
-                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
-                                </div>
-                            </div>
-                        {% elif item.type == 'mpack' %}
                             {% set base_price = item.unit_price %}
                             {% set quantity = item.quantity %}
                             {% set discount_percent = item.discount_percent or 0 %}
@@ -130,12 +124,12 @@
                             <!-- Price Breakdown -->
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
-                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>Subtotal ({{ quantity }} units):</span>
                                     <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
                                 </div>
-                                {% if item.discount_percent and item.discount_percent > 0 %}
+                                {% if discount_percent > 0 %}
                                 <div class="d-flex justify-content-between text-danger">
-                                    <span>Discount ({{ item.discount_percent }}%):</span>
+                                    <span>Discount ({{ discount_percent }}%):</span>
                                     <span>-₹{{ "%.2f"|format(discount_amount) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between">
@@ -144,7 +138,7 @@
                                 </div>
                                 {% endif %}
                                 <div class="d-flex justify-content-between">
-                                    <span>GST ({{ item.gst_percent or 12 }}%):</span>
+                                    <span>GST ({{ gst_percent }}%):</span>
                                     <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
@@ -152,8 +146,54 @@
                                     <span>₹{{ "%.2f"|format(final_total) }}</span>
                                 </div>
                             </div>
+                        {% elif item.type == 'blanket' %}
+                            {# For Blankets, use the pre-calculated values from the product object #}
+                            <p>Size: {{ item.width }} x {{ item.length }} cm</p>
+                            {% if item.bar_type %}
+                                <p>Barring: {{ item.bar_type }}</p>
+                            {% endif %}
+                            
+                            <!-- Price Breakdown for Blankets -->
+                            <div class="price-breakdown mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>₹{{ "%.2f"|format((item.unit_price / (1 + (item.gst_percent / 100))) * item.quantity) }}</span>
+                                </div>
+                                {% if item.discount_percent > 0 %}
+                                <div class="d-flex justify-content-between text-danger">
+                                    <span>Discount ({{ item.discount_percent }}%):</span>
+                                    <span>-₹{{ "%.2f"|format((item.unit_price / (1 + (item.gst_percent / 100))) * item.quantity * (item.discount_percent / 100)) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>After Discount:</span>
+                                    <span>₹{{ "%.2f"|format((item.unit_price / (1 + (item.gst_percent / 100))) * item.quantity * (1 - (item.discount_percent / 100))) }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between">
+                                    <span>GST ({{ item.gst_percent }}%):</span>
+                                    <span>+₹{{ "%.2f"|format(item.gst_amount or 0) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Amount:</span>
+                                    <span>₹{{ "%.2f"|format(item.total_price) }}</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="price-breakdown mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>₹{{ "%.2f"|format(item.unit_price * item.quantity) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>GST ({{ item.gst_percent or 12 }}%):</span>
+                                    <span>+₹{{ "%.2f"|format(item.gst_amount or (item.unit_price * item.quantity * 0.12)) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Amount:</span>
+                                    <span>₹{{ "%.2f"|format(item.total_price or 0) }}</span>
+                                </div>
+                            </div>
                         {% endif %}
-                        <div class="item-price">₹{{ "%.2f"|format(item.total_price or 0) }}</div>
                         <div class="item-quantity">Quantity: {{ item.quantity or 1 }}</div>
                         {% if item.unit_price %}
                             <div class="unit-price">Unit Price: ₹{{ "%.2f"|format(item.unit_price or 0) }}</div>
@@ -206,3 +246,4 @@
     </style>
 </body>
 </html>
+
