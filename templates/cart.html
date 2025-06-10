@@ -88,7 +88,11 @@
                             {% set area_sq_m = (item.length / 1000) * (item.width / 1000) %}
                             
                             {# Get base rate from unit price (rate per sq.meter) #}
-                            {% set rate_per_sq_mt = item.unit_price / (area_sq_m > 0 ? area_sq_m : 1) %}
+                            {% if area_sq_m > 0 %}
+                                {% set rate_per_sq_mt = item.unit_price / area_sq_m %}
+                            {% else %}
+                                {% set rate_per_sq_mt = item.unit_price %}
+                            {% endif %}
                             
                             {# Calculate base price #}
                             {% set base_price = area_sq_m * rate_per_sq_mt %}
@@ -286,3 +290,4 @@
     </style>
 </body>
 </html>
+
