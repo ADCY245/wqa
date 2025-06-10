@@ -112,7 +112,7 @@
                 <option value="">-- Select --</option>
               </select>
               <p id="barRate" class="small text-muted mb-1"></p>
-              <p id="netUnitPrice" class="mb-1"></p>
+              <p id="netUnitPrice" class="fw-bold mb-2"></p>
             </div>
             <div class="mb-2">
               <label for="quantityInput" class="form-label">Quantity:</label>
@@ -128,11 +128,15 @@
         </div>
 
         <div id="discountSection" class="mb-3" style="display:none;">
-          <label for="discountSelect" class="form-label">Select Discount:</label>
-          <select id="discountSelect" class="form-select form-select-sm mb-2">
-            <option value="">-- Select Discount --</option>
-          </select>
-          <p id="discountedPrice/unit" class="small"></p>        </div>
+          <div class="mb-2">
+            <label for="discountSelect" class="form-label">Select Discount:</label>
+            <select id="discountSelect" class="form-select form-select-sm mb-1">
+              <option value="">-- Select Discount --</option>
+            </select>
+            <p id="discountedValue" class="small text-muted mb-0" style="display: none;"></p>
+          </div>
+          <p id="discountedPrice/unit" class="small"></p>
+        </div>
 
         <div class="mb-2">
           <label for="gstSelect" class="form-label">GST Rate:</label>
