@@ -438,16 +438,35 @@ function addMpackToCart() {
     return;
   }
 
+  // Get discount information
+  const discountSelect = document.getElementById('discountSelect');
+  const discount = discountSelect ? parseFloat(discountSelect.value) || 0 : 0;
+  
+  // Calculate prices
+  let unitPrice = parseFloat(document.getElementById('netPrice').textContent) || 0;
+  let totalPriceBeforeDiscount = unitPrice * quantity;
+  let discountAmount = (totalPriceBeforeDiscount * discount) / 100;
+  let finalPrice = totalPriceBeforeDiscount - discountAmount;
+  
+  // Add GST (assuming 12% as per the form)
+  const gstRate = 0.12;
+  const gstAmount = finalPrice * gstRate;
+  finalPrice += gstAmount;
+
   const product = {
     id: 'mpack_' + Date.now(),
     type: 'mpack',
     name: 'Underpacking Material',
     machine: machineSelect.options[machineSelect.selectedIndex].text,
-    thickness: thicknessSelect.value + ' micron',
+    thickness: thicknessSelect.value, // Removed 'micron' as it's added in the template
     size: sizeSelect.options[sizeSelect.selectedIndex].text,
     quantity: quantity,
-    unit_price: parseFloat((totalPrice / quantity).toFixed(2)),
-    total_price: parseFloat(totalPrice.toFixed(2)),
+    unit_price: parseFloat(unitPrice.toFixed(2)),
+    total_price: parseFloat(finalPrice.toFixed(2)),
+    discount_percent: discount,
+    discount_amount: parseFloat(discountAmount.toFixed(2)),
+    gst_amount: parseFloat(gstAmount.toFixed(2)),
+    gst_percent: 12,
     image: 'images/mpack-placeholder.jpg',
     added_at: new Date().toISOString()
   };
