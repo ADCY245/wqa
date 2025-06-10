@@ -244,13 +244,18 @@ function calculatePrice() {
   priceWithBar = basePrice + currentBarRate;
   console.log('Price with bar:', priceWithBar);
   
-  const netUnitPriceElement = document.getElementById("netUnitPrice");
+  // Only show base price in the left column
+  const netUnitPriceElement = document.querySelectorAll("#netUnitPrice")[0];
   if (netUnitPriceElement) {
+    netUnitPriceElement.innerText = ''; // Clear the left column price
+  }
+  
+  // Show net price/unit after barring type in the right column
+  const netPriceAfterBarElement = document.querySelectorAll("#netUnitPrice")[1];
+  if (netPriceAfterBarElement) {
     const displayText = `Net Price/Unit: ₹${priceWithBar.toFixed(2)}`;
-    console.log('Updating net unit price:', displayText);
-    netUnitPriceElement.innerText = displayText;
-  } else {
-    console.warn('netUnitPriceElement not found');
+    console.log('Updating net unit price after bar:', displayText);
+    netPriceAfterBarElement.innerText = displayText;
   }
 
   // Calculate total price
@@ -274,16 +279,26 @@ function calculatePrice() {
 function applyDiscount() {
   const discountSelect = document.getElementById("discountSelect");
   const discountVal = discountSelect.value;
+  const discountedValueElement = document.getElementById("discountedValue");
+  
   if (discountVal) {
     const discount = parseFloat(discountVal.replace('%', '')) || 0;
     currentDiscount = discount;
-    finalDiscountedPrice = priceWithBar * (1 - discount / 100);
-    const discountedPriceElement = document.getElementById("discountedPrice");
-    if (discountedPriceElement) {
-      discountedPriceElement.innerText = `Discounted Price: ₹${finalDiscountedPrice.toFixed(2)}`;
-    }  } else {
+    const discountAmount = (priceWithBar * discount) / 100;
+    finalDiscountedPrice = priceWithBar - discountAmount;
+    
+    // Show discounted value per unit
+    if (discountedValueElement) {
+      discountedValueElement.style.display = 'block';
+      discountedValueElement.textContent = `Discounted value/unit: ₹${discountAmount.toFixed(2)}`;
+    }
+  } else {
     currentDiscount = 0;
     finalDiscountedPrice = priceWithBar;
+    // Hide discounted value display when no discount is selected
+    if (discountedValueElement) {
+      discountedValueElement.style.display = 'none';
+    }
   }
 }
 
@@ -369,13 +384,24 @@ function showDiscountSection() {
 }
 
 function addBlanketToCart() {
+  // Get input elements
   const blanketSelect = document.getElementById('blanketSelect');
-  const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
-  // Get the final price from the price summary
-  const finalPriceText = document.getElementById('finalPrice').textContent;
-  const totalPrice = parseFloat(finalPriceText.replace(/[^0-9.]/g, '')) || 0;
+  const machineSelect = document.getElementById('machineSelect');
+  const thicknessSelect = document.getElementById('thicknessSelect');
+  const lengthInput = document.getElementById('lengthInput');
+  const widthInput = document.getElementById('widthInput');
+  const quantityInput = document.getElementById('quantityInput');
+  const barSelect = document.getElementById('barSelect');
+  const gstSelect = document.getElementById('gstSelect');
   
-  // Convert the selected value to a number for comparison since our IDs are numbers
+  // Get input values
+  const quantity = parseInt(quantityInput.value) || 1;
+  const length = parseFloat(lengthInput.value) || 0;
+  const width = parseFloat(widthInput.value) || 0;
+  const unit = document.getElementById('unitSelect').value || 'mm';
+  const gstPercent = parseFloat(gstSelect.value) || 0;
+  
+  // Get selected blanket
   const selectedBlanketId = parseInt(blanketSelect.value);
   const selectedBlanket = blanketData.find(b => b.id === selectedBlanketId);
   
@@ -383,35 +409,48 @@ function addBlanketToCart() {
     showToast('Error', 'Please select a valid blanket', 'error');
     return;
   }
-
-  // Get all the necessary values
-  const machineSelect = document.getElementById('machineSelect');
-  const thicknessSelect = document.getElementById('thicknessSelect');
-  const lengthInput = document.getElementById('lengthInput').value;
-  const widthInput = document.getElementById('widthInput').value;
-  const barSelect = document.getElementById('barSelect');
+  
+  // Get barring information
   const selectedBar = barData.find(b => b.id === barSelect.value);
   const barType = selectedBar ? selectedBar.name : 'None';
   const barPrice = selectedBar ? parseFloat(selectedBar.price) : 0;
   
-  // Calculate unit price (price per unit before quantity and GST)
-  const unitPrice = parseFloat((totalPrice / quantity).toFixed(2));
+  // Convert dimensions to meters for calculation
+  const lengthM = convertToMeters(length, unit);
+  const widthM = convertToMeters(width, unit);
+  const areaSqM = lengthM * widthM;
+  
+  // Calculate base price (area * rate per sq.meter)
+  const basePrice = areaSqM * selectedBlanket.ratePerSqMt;
+  
+  // Apply barring price if any
+  const priceWithBar = basePrice + barPrice;
+  
+  // Apply discount if any
+  const discountAmount = currentDiscount > 0 ? (priceWithBar * currentDiscount / 100) : 0;
+  const discountedPrice = priceWithBar - discountAmount;
+  
+  // Calculate GST on the discounted price
+  const gstAmount = (discountedPrice * gstPercent) / 100;
+  const finalUnitPrice = discountedPrice + gstAmount;
+  const finalTotalPrice = finalUnitPrice * quantity;
 
+  // Create product object for cart
   const product = {
     id: 'blanket_' + Date.now(),
     type: 'blanket',
     name: selectedBlanket.name,
     machine: machineSelect.options[machineSelect.selectedIndex].text,
-    thickness: thicknessSelect.value,
-    length: lengthInput,
-    width: widthInput,
+    thickness: thicknessSelect ? thicknessSelect.value : '',
+    length: length,
+    width: width,
     bar_type: barType,
     bar_price: barPrice,
     quantity: quantity,
-    unit_price: unitPrice,
-    total_price: totalPrice,
+    unit_price: finalUnitPrice,
+    total_price: finalTotalPrice,
     discount_percent: currentDiscount,
-    gst_percent: parseFloat(document.getElementById('gstSelect').value) || 0,
+    gst_percent: gstPercent,
     image: 'images/blanket-placeholder.jpg',
     added_at: new Date().toISOString()
   };
@@ -445,5 +484,4 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
-
 
