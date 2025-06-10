@@ -70,6 +70,8 @@
                     <div class="item-details">
                         <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
+                            {% set subtotal = (item.unit_price * item.quantity) %}
+                            {% set gst_amount = (subtotal * (item.gst_percent / 100)) %}
                             <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
                             <p>Machine: {{ item.machine or 'Unknown' }}</p>
                             <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }} ({{ item.thickness or 'N/A' }})</p>
@@ -77,9 +79,11 @@
                                 <p>Barring: {{ item.bar_type }}</p>
                             {% endif %}
                             {% if item.discount_percent and item.discount_percent > 0 %}
-                                <p>Discount: {{ item.discount_percent }}%</p>
+                                {% set discount_amount = (subtotal * (item.discount_percent / 100)) %}
+                                <p>Discount: {{ item.discount_percent }}% (-₹{{ "%.2f"|format(discount_amount) }})</p>
+                                {% set subtotal = subtotal - discount_amount %}
                             {% endif %}
-                            <p>GST ({{ item.gst_percent or 18 }}%): ₹{{ "%.2f"|format((item.total_price * item.gst_percent / 100) or 0) }}</p>
+                            <p>GST ({{ item.gst_percent or 18 }}%): ₹{{ "%.2f"|format(gst_amount) }}</p>
                         {% elif item.type == 'mpack' %}
                             <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
                             {% if item.size %}
