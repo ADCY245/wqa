@@ -1,504 +1,209 @@
-let priceMap = {};
-let currentNetPrice = 0;
-let currentDiscount = 0; // Track current discount percentage
-let currentThickness = ''; // Track current thickness
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadMachines();
-
-  document.getElementById("machineSelect").addEventListener("change", () => {
-    document.getElementById("thicknessSection").style.display = "block";
-  });
-
-  // Update thickness change handler to recalculate prices
-  document.getElementById("thicknessSelect").addEventListener("change", () => {
-    loadSizes();
-    // Reset current discount when thickness changes
-    currentDiscount = 0;
-    const discountSelect = document.getElementById("discountSelect");
-    if (discountSelect) discountSelect.value = "";
-    calculateFinalPrice();
-  });
-  
-  // Update size selection handler
-  document.getElementById("sizeSelect").addEventListener("change", () => {
-    handleSizeSelection();
-    calculateFinalPrice();
-  });
-  
-  // Update sheet input handler
-  document.getElementById("sheetInput").addEventListener("input", () => {
-    calculateFinalPrice();
-  });
-  
-  // Update discount select handler
-  document.getElementById("discountSelect").addEventListener("change", () => {
-    applyDiscount();
-    calculateFinalPrice();
-  });
-});
-
-function loadMachines() {
-  fetch("/static/data/machine.json")
-    .then(res => res.json())
-    .then(data => {
-      const machineSelect = document.getElementById("machineSelect");
-      data.machines.forEach(machine => {
-        const opt = document.createElement("option");
-        opt.value = machine.id;
-        opt.textContent = machine.name;
-        machineSelect.appendChild(opt);
-      });
-    });
-}
-
-function loadSizes() {
-  const thicknessSelect = document.getElementById("thicknessSelect");
-  const sizeSelect = document.getElementById("sizeSelect");
-  
-  if (!thicknessSelect || !sizeSelect) return;
-  
-  const thickness = thicknessSelect.value;
-  if (!thickness) return;
-  
-  // Update current thickness
-  currentThickness = thickness;
-  
-  // Show loading state
-  sizeSelect.innerHTML = '<option value="">Loading sizes...</option>';
-  sizeSelect.disabled = true;
-  
-  // Clear any previous errors
-  const existingError = document.getElementById('sizeError');
-  if (existingError) existingError.remove();
-  
-  // Show size section if not already visible
-  const sizeSection = document.getElementById("sizeSection");
-  if (sizeSection) sizeSection.style.display = "block";
-  
-  // Add cache busting to prevent caching issues
-  const cacheBuster = '?v=' + new Date().getTime();
-  
-  // Show loading indicator
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.id = 'loadingIndicator';
-  loadingIndicator.className = 'text-muted small';
-  loadingIndicator.textContent = 'Loading sizes and prices...';
-  sizeSelect.parentNode.insertBefore(loadingIndicator, sizeSelect.nextSibling);
-  
-  // Load both the sizes and prices
-  Promise.all([
-    // Load sizes for the selected thickness
-    fetch(`/static/products/chemical/${thickness}.json${cacheBuster}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`Failed to load sizes for ${thickness} micron`);
-        return res.json();
-      }),
-    // Load all prices
-    fetch(`/static/products/chemical/price.json${cacheBuster}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load price data');
-        return res.json();
-      })
-  ])
-  .then(([sizesData, pricesData]) => {
-    // Clean up loading indicator
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    if (loadingIndicator) loadingIndicator.remove();
-    
-    if (!Array.isArray(sizesData) || !Array.isArray(pricesData)) {
-      throw new Error('Invalid data format received');
-    }
-    
-    // Create price lookup map
-    const priceLookup = {};
-    pricesData.forEach(priceItem => {
-      priceLookup[priceItem.id] = priceItem.price;
-    });
-    
-    // Reset size select
-    sizeSelect.innerHTML = '<option value="">-- Select Size --</option>';
-    sizeSelect.disabled = false;
-    
-    // Clear and rebuild price map
-    priceMap = {};
-    
-    // Populate size dropdown with prices
-    sizesData.forEach(item => {
-      const price = priceLookup[item.id] || 0;
-      const opt = document.createElement("option");
-      opt.value = item.id;
-      opt.textContent = `${item.width} x ${item.length}`;
-      opt.dataset.price = price; // Store price in data attribute
-      sizeSelect.appendChild(opt);
-      priceMap[item.id] = price;
-    });
-    
-    // Show size section
-    const sizeSection = document.getElementById("sizeSection");
-    if (sizeSection) sizeSection.style.display = "block";
-    
-    // Show other relevant sections
-    const priceSection = document.getElementById("priceSection");
-    const sheetInputSection = document.getElementById("sheetInputSection");
-    if (priceSection) priceSection.style.display = "block";
-    if (sheetInputSection) sheetInputSection.style.display = "block";
-    
-    // Reset discount state
-    const discountSelect = document.getElementById("discountSelect");
-    if (discountSelect) {
-      discountSelect.value = "";
-      currentDiscount = 0;
-    }
-    
-    const finalDiscountedPrice = document.getElementById("finalDiscountedPrice");
-    if (finalDiscountedPrice) finalDiscountedPrice.textContent = "0.00";
-    
-    const discountSection = document.getElementById("discountSection");
-    if (discountSection) discountSection.style.display = "none";
-    
-    const discountPromptSection = document.getElementById("discountPromptSection");
-    if (discountPromptSection) {
-      discountPromptSection.style.display = "block";
-      discountPromptSection.innerHTML = `
-        <label class="form-label">Apply Discount?</label>
-        <button class="btn btn-outline-primary btn-sm" onclick="showDiscountSection(true)">Yes</button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="showDiscountSection(false)">No</button>
-      `;
-    }
-  })
-  .catch(err => {
-    console.error(`Failed to load data for ${currentThickness} micron:`, err);
-    
-    // Clean up loading indicator
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    if (loadingIndicator) loadingIndicator.remove();
-    
-    // Reset size select
-    const sizeSelect = document.getElementById("sizeSelect");
-    if (sizeSelect) {
-      sizeSelect.innerHTML = '<option value="">-- Select Size --</option>';
-      sizeSelect.disabled = false;
-      
-      // Create or update error message
-      let errorElement = document.getElementById('sizeError');
-      if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.id = 'sizeError';
-        errorElement.className = 'text-danger small mt-1';
-        sizeSelect.parentNode.insertBefore(errorElement, sizeSelect.nextSibling);
-      }
-      errorElement.textContent = `Error: ${err.message || 'Failed to load sizes'}. Please try again.`;
-      
-      // Auto-hide error after 5 seconds
-      if (window.errorTimeout) clearTimeout(window.errorTimeout);
-      window.errorTimeout = setTimeout(() => {
-        if (errorElement && errorElement.parentNode) {
-          errorElement.remove();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <style>
+        .cart-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
         }
-      }, 5000);
-    }
-  });
-}
-
-function handleSizeSelection() {
-  const sizeSelect = document.getElementById("sizeSelect");
-  const selectedId = sizeSelect.value;
-  
-  if (!selectedId) {
-    resetCalculations();
-    return;
-  }
-  
-  // Show price section when a size is selected
-  document.getElementById("priceSection").style.display = "block";
-  document.getElementById("sheetInputSection").style.display = "block";
-  
-  // Update net price display
-  currentNetPrice = parseFloat(priceMap[selectedId] || 0);
-  document.getElementById("netPrice").textContent = currentNetPrice.toFixed(2);
-  
-  // Reset sheet input and calculate initial price
-  const sheetInput = document.getElementById("sheetInput");
-  sheetInput.value = "";
-  
-  // Show total price section
-  document.getElementById("totalPriceSection").style.display = "block";
-  
-  // Reset discount when size changes
-  currentDiscount = 0;
-  const discountSelect = document.getElementById("discountSelect");
-  if (discountSelect) discountSelect.value = "";
-  
-  // Update prices
-  calculateFinalPrice();
-}
-
-function resetCalculations() {
-  currentNetPrice = 0;
-  
-  // Reset price displays
-  const priceElements = ["netPrice", "totalPrice", "gstAmount", "finalPrice", "finalDiscountedPrice"];
-  priceElements.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = "0.00";
-  });
-  
-  // Reset input fields
-  const sheetInput = document.getElementById("sheetInput");
-  if (sheetInput) sheetInput.value = "";
-  
-  // Show/hide sections appropriately
-  const sections = {
-    "priceSection": "none",
-    "sheetInputSection": "none",
-    "totalPriceSection": "none",
-    "discountPromptSection": "none",
-    "discountSection": "none",
-    "addToCartBtn": "none"
-  };
-  
-  Object.entries(sections).forEach(([id, display]) => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = display;
-  });
-  
-  // Show size section if we have a size select
-  const sizeSection = document.getElementById("sizeSection");
-  if (sizeSection) sizeSection.style.display = "block";
-  
-  // Reset discount prompt if no discount is applied
-  if (currentDiscount <= 0) {
-    const discountPrompt = document.getElementById("discountPromptSection");
-    if (discountPrompt) {
-      discountPrompt.innerHTML = `
-        <label class="form-label">Apply Discount?</label>
-        <button class="btn btn-outline-primary btn-sm" onclick="showDiscountSection(true)">Yes</button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="showDiscountSection(false)">No</button>
-      `;
-    }
-  }
-}
-
-function calculateFinalPrice() {
-  const sheetInput = document.getElementById("sheetInput");
-  const quantity = parseInt(sheetInput.value) || 0;
-  
-  // Calculate base price (price per sheet * quantity)
-  const basePrice = currentNetPrice * quantity;
-  
-  // Apply discount if any (same as blankets.js)
-  const discountAmount = currentDiscount > 0 ? (basePrice * currentDiscount / 100) : 0;
-  const discountedPrice = basePrice - discountAmount;
-  
-  // Calculate GST on the discounted price (same as blankets.js)
-  const gstAmount = (discountedPrice * 12) / 100;
-  const finalUnitPrice = discountedPrice + gstAmount;
-  const finalPrice = finalUnitPrice; // For consistency with blankets.js naming
-  
-  // Update the price displays (matching blankets.js format)
-  document.getElementById("netPrice").textContent = currentNetPrice.toFixed(2);
-  document.getElementById("totalPrice").textContent = basePrice.toFixed(2);
-  document.getElementById("gstAmount").textContent = gstAmount.toFixed(2);
-  document.getElementById("finalPrice").textContent = finalPrice.toFixed(2);
-  
-  // Show the price sections
-  document.getElementById("totalPriceSection").style.display = "block";
-  document.getElementById("discountPromptSection").style.display = quantity > 0 ? "block" : "none";
-  
-  // Show discount details if discount is applied (matching blankets.js format)
-  if (currentDiscount > 0) {
-    const discountDetails = document.getElementById("discountDetails");
-    if (discountDetails) {
-      const totalBeforeDiscount = basePrice;
-      const totalAfterDiscount = discountedPrice;
-      
-      discountDetails.innerHTML = `
-        <div class="price-breakdown">
-          <div class="d-flex justify-content-between">
-            <span>Subtotal (${quantity} units):</span>
-            <span>₹${totalBeforeDiscount.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between text-danger">
-            <span>Discount (${currentDiscount}%):</span>
-            <span>-₹${discountAmount.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span>After Discount:</span>
-            <span>₹${totalAfterDiscount.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span>GST (12%):</span>
-            <span>+₹${gstAmount.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
-            <span>Final Amount:</span>
-            <span>₹${finalPrice.toFixed(2)}</span>
-          </div>
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-details {
+            flex-grow: 1;
+            padding: 0 20px;
+        }
+        .item-price {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .item-quantity {
+            color: #666;
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .cart-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 50px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="cart-container">
+        <div class="cart-header">
+            <h1>Your Shopping Cart</h1>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('home') }}" class="btn btn-outline-primary">Continue Shopping</a>
+                <span class="badge bg-primary">{{ cart.products|length }} items</span>
+            </div>
         </div>
-      `;
-    }
+
+        {% if cart.products %}
+            <div class="cart-items">
+                {% for item in cart.products %}
+                <div class="cart-item">
+                    <div class="item-details">
+                        <h5>{{ item.name or 'Unknown Product' }}</h5>
+                        {% if item.type == 'blanket' %}
+                            {% set unit_price_before_discount = item.unit_price / (1 + (item.gst_percent / 100)) %}
+                            {% set subtotal_before_discount = unit_price_before_discount * item.quantity %}
+                            {% set discount_amount = (subtotal_before_discount * (item.discount_percent / 100)) if item.discount_percent and item.discount_percent > 0 else 0 %}
+                            {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
+                            {% set gst_amount = (subtotal_after_discount * (item.gst_percent / 100)) if item.gst_percent else 0 %}
+                            {% set final_total = subtotal_after_discount + gst_amount %}
+                            
+                            <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
+                            <p>Machine: {{ item.machine or 'Unknown' }}</p>
+                            <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }} ({{ item.thickness or 'N/A' }})</p>
+                            {% if item.bar_type and item.bar_type != 'None' %}
+                                <p>Barring: {{ item.bar_type }}</p>
+                            {% endif %}
+                            
+                            <!-- Price Breakdown -->
+                            <div class="price-breakdown mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
+                                </div>
+                                {% if item.discount_percent and item.discount_percent > 0 %}
+                                <div class="d-flex justify-content-between text-danger">
+                                    <span>Discount ({{ item.discount_percent }}%):</span>
+                                    <span>-₹{{ "%.2f"|format(discount_amount) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>After Discount:</span>
+                                    <span>₹{{ "%.2f"|format(subtotal_after_discount) }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between">
+                                    <span>GST ({{ item.gst_percent or 18 }}%):</span>
+                                    <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Amount:</span>
+                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
+                                </div>
+                            </div>
+                        {% elif item.type == 'mpack' %}
+                            {% set base_price = item.unit_price %}
+                            {% set quantity = item.quantity %}
+                            {% set discount_percent = item.discount_percent or 0 %}
+                            
+                            {# Calculate prices like in mpack.js #}
+                            {% set subtotal_before_discount = base_price * quantity %}
+                            {% set discount_amount = (subtotal_before_discount * discount_percent / 100) if discount_percent > 0 else 0 %}
+                            {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
+                            {% set gst_percent = item.gst_percent or 12 %}
+                            {% set gst_amount = (subtotal_after_discount * gst_percent / 100) %}
+                            {% set final_total = subtotal_after_discount + gst_amount %}
+                            
+                            <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
+                            {% if item.size %}
+                                <p>Size: {{ item.size }}</p>
+                            {% endif %}
+                            
+                            <!-- Price Breakdown -->
+                            <div class="price-breakdown mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
+                                </div>
+                                {% if item.discount_percent and item.discount_percent > 0 %}
+                                <div class="d-flex justify-content-between text-danger">
+                                    <span>Discount ({{ item.discount_percent }}%):</span>
+                                    <span>-₹{{ "%.2f"|format(discount_amount) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>After Discount:</span>
+                                    <span>₹{{ "%.2f"|format(subtotal_after_discount) }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between">
+                                    <span>GST ({{ item.gst_percent or 12 }}%):</span>
+                                    <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Amount:</span>
+                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="item-price">₹{{ "%.2f"|format(item.total_price or 0) }}</div>
+                        <div class="item-quantity">Quantity: {{ item.quantity or 1 }}</div>
+                        {% if item.unit_price %}
+                            <div class="unit-price">Unit Price: ₹{{ "%.2f"|format(item.unit_price or 0) }}</div>
+                        {% endif %}
+                    </div>
+                    <form action="{{ url_for('remove_from_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="{{ item.id }}">
+                        <button type="submit" class="remove-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="cart-summary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4>Total: ₹{{ "%.2f"|format(total) }}</h4>
+                    <a href="#" class="btn btn-primary btn-lg">Proceed to Checkout</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-cart">
+                <h3>Your cart is empty</h3>
+                <p>Looks like you haven't added anything to your cart yet.</p>
+                <a href="{{ url_for('home') }}" class="btn btn-primary">Start Shopping</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    // Ensure discount section is visible
-    const discountSection = document.getElementById("discountSection");
-    if (discountSection) {
-      discountSection.style.display = "block";
-    }
-  } else {
-    // No discount applied - clear discount details
-    const discountDetails = document.getElementById("discountDetails");
-    if (discountDetails) {
-      discountDetails.innerHTML = '';
-    }
-  }
-  
-  // Show/hide add to cart button based on quantity
-  document.getElementById("addToCartBtn").style.display = quantity > 0 ? "block" : "none";
-}
+    <style>
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.25rem;
+        }
+        .remove-btn:hover {
+            color: #a02d36;
+        }
+        .remove-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+    </style>
+</body>
+</html>
 
-function showDiscountSection(apply) {
-  const discountSection = document.getElementById("discountSection");
-  const finalPrice = document.getElementById("finalPrice").textContent;
-  const finalDiscountedPrice = document.getElementById("finalDiscountedPrice");
-
-  if (!apply) {
-    discountSection.style.display = "none";
-    finalDiscountedPrice.textContent = finalPrice;
-    return;
-  }
-
-  // Load discount options
-  fetch("/static/data/discount.json")
-    .then(res => res.json())
-    .then(data => {
-      const select = document.getElementById("discountSelect");
-      select.innerHTML = '<option value="">-- Select Discount --</option>';
-      data.discounts.forEach(discountStr => {
-        const percent = parseFloat(discountStr);
-        const opt = document.createElement("option");
-        opt.value = percent;
-        opt.textContent = discountStr;
-        select.appendChild(opt);
-      });
-      discountSection.style.display = "block";
-      finalDiscountedPrice.textContent = finalPrice;
-    });
-}
-
-function applyDiscount() {
-  const discountSelect = document.getElementById("discountSelect");
-  const discountPromptSection = document.getElementById("discountPromptSection");
-  
-  if (!discountSelect || !discountPromptSection) return;
-  
-  currentDiscount = parseFloat(discountSelect.value) || 0;
-  
-  if (currentDiscount > 0) {
-    // Update the discount prompt
-    discountPromptSection.innerHTML = 
-      `<button class="btn btn-sm btn-outline-primary" onclick="showDiscountSection(true)">
-        Change Discount (${currentDiscount}% applied)
-      </button>`;
-    
-    // Show the discount section and ensure it's visible
-    const discountSection = document.getElementById("discountSection");
-    if (discountSection) {
-      discountSection.style.display = "block";
-    }
-    
-    // Force update the price display
-    calculateFinalPrice();
-  } else {
-    // No discount selected
-    discountPromptSection.innerHTML = `
-      <label class="form-label">Apply Discount?</label>
-      <button class="btn btn-outline-primary btn-sm" onclick="showDiscountSection(true)">Yes</button>
-      <button class="btn btn-outline-secondary btn-sm" onclick="showDiscountSection(false)">No</button>
-    `;
-    
-    // Hide the discount section and clear any discount details
-    const discountSection = document.getElementById("discountSection");
-    if (discountSection) {
-      discountSection.style.display = "none";
-    }
-    
-    // Recalculate without discount
-    calculateFinalPrice();
-  }
-}
-
-function addMpackToCart() {
-  const machineSelect = document.getElementById('machineSelect');
-  const thicknessSelect = document.getElementById('thicknessSelect');
-  const sizeSelect = document.getElementById('sizeSelect');
-  const sheetInput = document.getElementById('sheetInput');
-  const quantity = parseInt(sheetInput.value) || 1;
-  const totalPrice = parseFloat(document.getElementById('finalPrice').textContent.replace('₹', '')) || 0;
-  
-  if (!machineSelect.value || !thicknessSelect.value || !sizeSelect.value || !sheetInput.value) {
-    showToast('Error', 'Please fill in all required fields', 'error');
-    return;
-  }
-
-  // Get discount information
-  const discountSelect = document.getElementById('discountSelect');
-  const discount = discountSelect ? parseFloat(discountSelect.value) || 0 : 0;
-  
-  // Calculate prices
-  let unitPrice = parseFloat(document.getElementById('netPrice').textContent) || 0;
-  let totalPriceBeforeDiscount = unitPrice * quantity;
-  let discountAmount = (totalPriceBeforeDiscount * discount) / 100;
-  let finalPrice = totalPriceBeforeDiscount - discountAmount;
-  
-  // Add GST (assuming 12% as per the form)
-  const gstRate = 0.12;
-  const gstAmount = finalPrice * gstRate;
-  finalPrice += gstAmount;
-
-  const product = {
-    id: 'mpack_' + Date.now(),
-    type: 'mpack',
-    name: 'Underpacking Material',
-    machine: machineSelect.options[machineSelect.selectedIndex].text,
-    thickness: thicknessSelect.value, // Removed 'micron' as it's added in the template
-    size: sizeSelect.options[sizeSelect.selectedIndex].text,
-    quantity: quantity,
-    unit_price: parseFloat(unitPrice.toFixed(2)),
-    total_price: parseFloat(finalPrice.toFixed(2)),
-    discount_percent: discount,
-    discount_amount: parseFloat(discountAmount.toFixed(2)),
-    gst_amount: parseFloat(gstAmount.toFixed(2)),
-    gst_percent: 12,
-    image: 'images/mpack-placeholder.jpg',
-    added_at: new Date().toISOString()
-  };
-
-  // Show loading state
-  const addToCartBtn = event.target;
-  const originalText = addToCartBtn.innerHTML;
-  addToCartBtn.disabled = true;
-  addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-
-  fetch('/add_to_cart', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(product)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      showToast('Success', 'Underpacking material added to cart!', 'success');
-      updateCartCount();
-    } else {
-      showToast('Error', data.message || 'Failed to add to cart', 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showToast('Error', 'Failed to add to cart', 'error');
-  })
-  .finally(() => {
-    addToCartBtn.disabled = false;
-    addToCartBtn.innerHTML = originalText;
-  });
-}
