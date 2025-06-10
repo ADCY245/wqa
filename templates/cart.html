@@ -188,11 +188,12 @@
                                     <span>₹{{ "%.2f"|format(item.calculations.basePrice) }}</span>
                                 </div>
                                 
-                                <!-- Show bar price if any -->
-                                {% if item.calculations.bar_price > 0 %}
+                                <!-- Show bar price if selected -->
+                                {% if item.bar_type and item.bar_type != 'None' %}
+                                {% set selectedBar = barData|selectattr('bar', 'equalto', item.bar_type)|first %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type }}):</span>
-                                    <span>+₹{{ "%.2f"|format(item.calculations.bar_price) }}</span>
+                                    <span>+₹{{ "%.2f"|format(selectedBar.barRate) }}</span>
                                 </div>
                                 {% endif %}
                                 
