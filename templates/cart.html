@@ -110,11 +110,16 @@
                                 </div>
                             </div>
                         {% elif item.type == 'mpack' %}
-                            {% set unit_price_before_discount = item.unit_price / (1 + ((item.gst_percent or 12) / 100)) %}
-                            {% set subtotal_before_discount = unit_price_before_discount * item.quantity %}
-                            {% set discount_amount = (subtotal_before_discount * (item.discount_percent / 100)) if item.discount_percent and item.discount_percent > 0 else 0 %}
+                            {% set base_price = item.unit_price %}
+                            {% set quantity = item.quantity %}
+                            {% set discount_percent = item.discount_percent or 0 %}
+                            
+                            {# Calculate prices like in mpack.js #}
+                            {% set subtotal_before_discount = base_price * quantity %}
+                            {% set discount_amount = (subtotal_before_discount * discount_percent / 100) if discount_percent > 0 else 0 %}
                             {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
-                            {% set gst_amount = (subtotal_after_discount * ((item.gst_percent or 12) / 100)) %}
+                            {% set gst_percent = item.gst_percent or 12 %}
+                            {% set gst_amount = (subtotal_after_discount * gst_percent / 100) %}
                             {% set final_total = subtotal_after_discount + gst_amount %}
                             
                             <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
