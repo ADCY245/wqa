@@ -446,9 +446,9 @@ function addMpackToCart() {
     thickness: thicknessSelect.value + ' micron',
     size: sizeSelect.options[sizeSelect.selectedIndex].text,
     quantity: quantity,
-    unit_price: (totalPrice / quantity).toFixed(2),
-    total_price: totalPrice.toFixed(2),
-    image: 'images/mpack-placeholder.jpg', // Update with actual image path if available
+    unit_price: parseFloat((totalPrice / quantity).toFixed(2)),
+    total_price: parseFloat(totalPrice.toFixed(2)),
+    image: 'images/mpack-placeholder.jpg',
     added_at: new Date().toISOString()
   };
 
