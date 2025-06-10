@@ -70,48 +70,7 @@
                     <div class="item-details">
                         <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
-                            {# Load blankets data #}
-                            {% set blankets_data = [] %}
-                            {% with blankets_json = url_for('static', filename='data/blankets.json') %}
-                                {% with response = get(blankets_json) %}
-                                    {% if response.status_code == 200 %}
-                                        {% set blankets_data = response.json().get('products', []) %}
-                                    {% endif %}
-                                {% endwith %}
-                            {% endwith %}
-                            
-                            {# Find the blanket in the data #}
-                            {% set blanket = namespace(rate=1000.00) %}
-                            {% for b in blankets_data %}
-                                {% if b.name in item.name %}
-                                    {% set blanket.rate = b.base_rate %}
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {# Calculate area in square meters #}
-                            {% set length_m = item.length / 1000 %}
-                            {% set width_m = item.width / 1000 %}
-                            {% set area_sqm = length_m * width_m %}
-                            
-                            {# Set base price and discount #}
-                            {% set base_price_per_sqm = blanket.rate %}
-                            {% set discount_percent = item.discount_percent | default(7.5) %}
-                            
-                            {# Calculate base price with barring #}
-                            {% set base_price = (area_sqm * base_price_per_sqm) + (item.bar_price or 0) %}
-                            
-                            {# Calculate subtotal before discount #}
-                            {% set subtotal_before_discount = base_price * item.quantity %}
-                            
-                            {# Apply discount #}
-                            {% set discount_amount = (subtotal_before_discount * (discount_percent / 100)) %}
-                            {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
-                            
-                            {# Calculate GST #}
-                            {% set gst_percent = 18 %}
-                            {% set gst_amount = (subtotal_after_discount * (gst_percent / 100)) %}
-                            {% set final_total = subtotal_after_discount + gst_amount %}
-                            
+                            {# Use the pre-calculated values from the backend #}
                             <p>Blanket Type: {{ item.name }}</p>
                             <p>Machine: {{ item.machine }}</p>
                             <p>Dimensions: {{ item.width }} x {{ item.length }} mm ({{ item.thickness }})</p>
@@ -123,25 +82,25 @@
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
                                     <span>Subtotal ({{ item.quantity }} units):</span>
-                                    <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
+                                    <span>₹{{ "%.2f"|format(item.unit_price * item.quantity) }}</span>
                                 </div>
-                                {% if discount_percent > 0 %}
+                                {% if item.discount_percent > 0 %}
                                 <div class="d-flex justify-content-between text-danger">
-                                    <span>Discount ({{ discount_percent }}%):</span>
-                                    <span>-₹{{ "%.2f"|format(discount_amount) }}</span>
+                                    <span>Discount ({{ item.discount_percent }}%):</span>
+                                    <span>-₹{{ "%.2f"|format((item.unit_price * item.quantity * item.discount_percent / 100)) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>After Discount:</span>
-                                    <span>₹{{ "%.2f"|format(subtotal_after_discount) }}</span>
+                                    <span>₹{{ "%.2f"|format((item.unit_price * item.quantity * (1 - item.discount_percent / 100))) }}</span>
                                 </div>
                                 {% endif %}
                                 <div class="d-flex justify-content-between">
-                                    <span>GST ({{ gst_percent }}%):</span>
-                                    <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
+                                    <span>GST (18%):</span>
+                                    <span>+₹{{ "%.2f"|format(item.total_price - (item.unit_price * item.quantity * (1 - (item.discount_percent or 0) / 100))) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
                                     <span>Final Amount:</span>
-                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
+                                    <span>₹{{ "%.2f"|format(item.total_price) }}</span>
                                 </div>
                             </div>
                             
@@ -289,3 +248,4 @@
     </style>
 </body>
 </html>
+
