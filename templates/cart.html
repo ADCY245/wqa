@@ -71,12 +71,17 @@
                         <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
                             {# Use the pre-calculated values from the backend #}
-                            <p>Blanket Type: {{ item.name }}</p>
-                            <p>Machine: {{ item.machine }}</p>
-                            <p>Dimensions: {{ item.width }} x {{ item.length }} mm ({{ item.thickness }})</p>
-                            {% if item.bar_type and item.bar_type != 'None' %}
-                                <p>Barring: {{ item.bar_type }}</p>
-                            {% endif %}
+                            <div class="product-details mb-3">
+                                <p class="mb-1"><strong>Blanket Type:</strong> {{ item.name }}</p>
+                                <p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>
+                                <p class="mb-1"><strong>Dimensions:</strong> {{ item.width }} × {{ item.length }} mm ({{ item.thickness }})</p>
+                                {% if item.bar_type and item.bar_type != 'None' %}
+                                    <p class="mb-1">
+                                        <strong>Barring:</strong> {{ item.bar_type }}
+                                        <span class="text-muted">(₹{{ "%.2f"|format(item.bar_price or 0) }}/unit)</span>
+                                    </p>
+                                {% endif %}
+                            </div>
                             
                             <!-- Price Breakdown for Blankets -->
                             {% set area_sq_m = (item.length / 1000) * (item.width / 1000) %}
@@ -265,3 +270,4 @@
     </style>
 </body>
 </html>
+
