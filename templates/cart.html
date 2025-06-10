@@ -174,9 +174,6 @@
                         {% elif item.type == 'blanket' %}
                             {# For Blankets, use the pre-calculated values from the calculations object #}
                             <p>Size: {{ item.width }} x {{ item.length }} mm ({{ item.thickness }})</p>
-                            {% if item.bar_type %}
-                                <p>Barring: {{ item.bar_type }}</p>
-                            {% endif %}
                             
                             <!-- Price Breakdown for Blankets -->
                             <div class="price-breakdown mt-3">
@@ -184,7 +181,7 @@
                                     <span>Area: {{ "%.4f"|format(item.calculations.areaSqM) }} m² × ₹{{ "%.2f"|format(item.calculations.ratePerSqMt) }}/m²</span>
                                     <span>₹{{ "%.2f"|format(item.calculations.basePrice) }}</span>
                                 </div>
-                                {% if item.calculations.bar_price > 0 %}
+                                {% if item.bar_type %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type }})</span>
                                     <span>+₹{{ "%.2f"|format(item.calculations.bar_price) }}</span>
