@@ -72,7 +72,14 @@
                         {% if item.type == 'blanket' %}
                             <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
                             <p>Machine: {{ item.machine or 'Unknown' }}</p>
-                            <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }}</p>
+                            <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }} ({{ item.thickness or 'N/A' }})</p>
+                            {% if item.bar_type and item.bar_type != 'None' %}
+                                <p>Barring: {{ item.bar_type }}</p>
+                            {% endif %}
+                            {% if item.discount_percent and item.discount_percent > 0 %}
+                                <p>Discount: {{ item.discount_percent }}%</p>
+                            {% endif %}
+                            <p>GST ({{ item.gst_percent or 18 }}%): ₹{{ "%.2f"|format((item.total_price * item.gst_percent / 100) or 0) }}</p>
                         {% elif item.type == 'mpack' %}
                             <p>Thickness: {{ item.thickness or 'Unknown' }} micron</p>
                             {% if item.size %}
