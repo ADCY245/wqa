@@ -4,7 +4,7 @@ let currentDiscount = 0;
 let currentBarRate = 0;
 
 window.onload = () => {
-  fetch("/static/data/machine.json")
+  fetch("/static/products/blankets/machine.json")
     .then(res => res.json())
     .then(data => {
       machineData = data.machines;
@@ -21,7 +21,7 @@ window.onload = () => {
       });
     });
 
-  fetch("/static/data/blankets.json")
+  fetch("/static/products/blankets/blankets.json")
     .then(res => res.json())
     .then(data => {
       blanketData = data.products;
@@ -40,7 +40,7 @@ window.onload = () => {
       });
     });
 
-  fetch("/static/data/bar.json")
+  fetch("/static/products/blankets/bar.json")
     .then(res => res.json())
     .then(data => {
       barData = data.bars;
@@ -424,3 +424,4 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
+
