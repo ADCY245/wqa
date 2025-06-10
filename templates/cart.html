@@ -84,12 +84,28 @@
                             </div>
                             
                             <!-- Price Breakdown for Blankets -->
+                            {# Calculate area in square meters #}
                             {% set area_sq_m = (item.length / 1000) * (item.width / 1000) %}
-                            {% set base_price = area_sq_m * item.unit_price %}
-                            {% set subtotal_before_discount = (base_price + (item.bar_price or 0)) * item.quantity %}
+                            
+                            {# Get base rate from unit price (rate per sq.meter) #}
+                            {% set rate_per_sq_mt = item.unit_price / (area_sq_m > 0 ? area_sq_m : 1) %}
+                            
+                            {# Calculate base price #}
+                            {% set base_price = area_sq_m * rate_per_sq_mt %}
+                            
+                            {# Add barring price #}
+                            {% set price_with_bar = base_price + (item.bar_price or 0) %}
+                            
+                            {# Calculate total before discount #}
+                            {% set subtotal_before_discount = price_with_bar * item.quantity %}
+                            
+                            {# Apply discount #}
                             {% set discount_amount = (subtotal_before_discount * (item.discount_percent / 100)) if item.discount_percent > 0 else 0 %}
                             {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
-                            {% set gst_amount = item.total_price - subtotal_after_discount %}
+                            
+                            {# Calculate GST on the final amount after discount #}
+                            {% set gst_amount = (subtotal_after_discount * (item.gst_percent / 100)) if item.gst_percent > 0 else 0 %}
+                            {% set final_total = subtotal_after_discount + gst_amount %}
                             
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
@@ -99,11 +115,11 @@
                                 {% if item.bar_price and item.bar_price > 0 %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type or 'Barring' }})</span>
-                                    <span>+₹{{ "%.2f"|format(item.bar_price * item.quantity) }}</span>
+                                    <span>+₹{{ "%.2f"|format((item.bar_price or 0) * item.quantity) }}</span>
                                 </div>
                                 {% endif %}
                                 <div class="d-flex justify-content-between fw-bold">
-                                    <span>Subtotal:</span>
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
                                     <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
                                 </div>
                                 {% if item.discount_percent > 0 %}
@@ -117,12 +133,12 @@
                                 </div>
                                 {% endif %}
                                 <div class="d-flex justify-content-between">
-                                    <span>GST (18%):</span>
+                                    <span>GST ({{ item.gst_percent }}%):</span>
                                     <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
                                     <span>Final Amount:</span>
-                                    <span>₹{{ "%.2f"|format(item.total_price) }}</span>
+                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
                                 </div>
                             </div>
                             
