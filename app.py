@@ -54,18 +54,30 @@ def cart():
         total_price = 0
         for item in cart_data['products']:
             try:
+                # Debug log the calculations
+                print(f"\nProcessing item: {item.get('name', 'Unknown')}")
+                print(f"Base price: {item.get('calculations', {}).get('basePrice', 0)}")
+                print(f"Barring price: {item.get('calculations', {}).get('bar_price', 0)}")
+                print(f"Price per unit: {item.get('calculations', {}).get('pricePerUnit', 0)}")
+                print(f"Quantity: {item.get('quantity', 0)}")
+                print(f"Discount %: {item.get('calculations', {}).get('discount_percent', 0)}")
+                print(f"Discount amount: {item.get('calculations', {}).get('discount_amount', 0)}")
+                print(f"GST %: {item.get('calculations', {}).get('gst_percent', 0)}")
+                print(f"GST amount: {item.get('calculations', {}).get('gst_amount', 0)}")
+                print(f"Final price: {item.get('calculations', {}).get('final_price', 0)}")
+                
                 # The item's total_price is already calculated with GST in the add_to_cart function
                 item_total = float(item.get('total_price', 0))
                 total_price += item_total
                 
                 # Debug log
-                print(f"Item: {item.get('name', 'Unknown')}, Total: {item_total}")
+                print(f"Item total: {item_total}")
                 
             except (ValueError, TypeError) as e:
                 print(f"Error processing item price: {e}")
                 continue
                 
-        print(f"Calculated total price: {total_price}")  # Debug log
+        print(f"\nCalculated total price: {total_price}")  # Debug log
         return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
         
     except Exception as e:
