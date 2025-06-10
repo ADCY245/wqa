@@ -171,7 +171,7 @@ def add_to_cart():
         # Validate required fields for blankets
         if product.get('type') == 'blanket':
             required_fields = ['name', 'machine', 'thickness', 'length', 'width', 'quantity', 
-                             'calculations', 'unit_price', 'total_price']
+                             'calculations', 'unit_price', 'total_price', 'bar_type', 'bar_price']
             missing_fields = [field for field in required_fields if field not in product]
             if missing_fields:
                 return jsonify({
@@ -190,6 +190,12 @@ def add_to_cart():
                     "success": False, 
                     "message": f"Missing calculation fields: {', '.join(missing_calc_fields)}"
                 }), 400
+            
+            # Ensure bar data is stored
+            if 'bar_type' not in product:
+                product['bar_type'] = ''
+            if 'bar_price' not in product:
+                product['bar_price'] = 0
         
         # Add timestamp and ensure ID exists
         if 'id' not in product:
