@@ -70,27 +70,27 @@
                     <div class="item-details">
                         <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
-                            {% set unit_price_before_discount = item.unit_price / (1 + (item.gst_percent / 100)) %}
-                            {% set subtotal_before_discount = unit_price_before_discount * item.quantity %}
+                            {% set unit_price_before_gst = item.unit_price / (1 + (item.gst_percent / 100)) %}
+                            {% set subtotal_before_discount = unit_price_before_gst * item.quantity %}
                             {% set discount_amount = (subtotal_before_discount * (item.discount_percent / 100)) if item.discount_percent and item.discount_percent > 0 else 0 %}
                             {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
-                            {% set gst_amount = (subtotal_after_discount * (item.gst_percent / 100)) if item.gst_percent else 0 %}
+                            {% set gst_amount = (subtotal_after_discount * (item.gst_percent / 100)) %}
                             {% set final_total = subtotal_after_discount + gst_amount %}
                             
-                            <p>Blanket Type: {{ item.name or 'Unknown' }}</p>
-                            <p>Machine: {{ item.machine or 'Unknown' }}</p>
-                            <p>Dimensions: {{ item.length or '0' }} x {{ item.width or '0' }} ({{ item.thickness or 'N/A' }})</p>
-                            {% if item.bar_type and item.bar_type != 'None' %}
+                            <p>Blanket Type: {{ item.name }}</p>
+                            <p>Machine: {{ item.machine }}</p>
+                            <p>Dimensions: {{ item.width }} x {{ item.length }} cm ({{ item.thickness }})</p>
+                            {% if item.bar_type %}
                                 <p>Barring: {{ item.bar_type }}</p>
                             {% endif %}
                             
-                            <!-- Price Breakdown -->
+                            <!-- Single Price Breakdown for Blankets -->
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
                                     <span>Subtotal ({{ item.quantity }} units):</span>
                                     <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
                                 </div>
-                                {% if item.discount_percent and item.discount_percent > 0 %}
+                                {% if item.discount_percent > 0 %}
                                 <div class="d-flex justify-content-between text-danger">
                                     <span>Discount ({{ item.discount_percent }}%):</span>
                                     <span>-₹{{ "%.2f"|format(discount_amount) }}</span>
@@ -101,9 +101,17 @@
                                 </div>
                                 {% endif %}
                                 <div class="d-flex justify-content-between">
-                                    <span>GST ({{ item.gst_percent or 18 }}%):</span>
+                                    <span>GST ({{ item.gst_percent }}%):</span>
                                     <span>+₹{{ "%.2f"|format(gst_amount) }}</span>
                                 </div>
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Amount:</span>
+                                    <span>₹{{ "%.2f"|format(final_total) }}</span>
+                                </div>
+                            </div>
+                            
+                        {% elif item.type == 'mpack' %}
+                            {# For MPack, use the pre-calculated values #}
                             {% set base_price = item.unit_price %}
                             {% set quantity = item.quantity %}
                             {% set discount_percent = item.discount_percent or 0 %}
@@ -121,7 +129,7 @@
                                 <p>Size: {{ item.size }}</p>
                             {% endif %}
                             
-                            <!-- Price Breakdown -->
+                            <!-- Price Breakdown for MPack -->
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
                                     <span>Subtotal ({{ quantity }} units):</span>
@@ -246,4 +254,3 @@
     </style>
 </body>
 </html>
-
