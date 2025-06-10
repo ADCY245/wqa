@@ -373,7 +373,13 @@ function addBlanketToCart() {
   const blanketSelect = document.getElementById('blanketSelect');
   const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
   const totalPrice = parseFloat(document.getElementById('finalPrice').textContent.replace('₹', '')) || 0;
-  const selectedBlanket = blanketData.find(b => b.id === blanketSelect.value);
+  
+  // Convert the selected value to a number for comparison since our IDs are numbers
+  const selectedBlanketId = parseInt(blanketSelect.value);
+  const selectedBlanket = blanketData.find(b => b.id === selectedBlanketId);
+  
+  console.log('Selected Blanket ID:', selectedBlanketId);
+  console.log('Available Blankets:', blanketData);
   
   if (!selectedBlanket) {
     showToast('Error', 'Please select a valid blanket', 'error');
@@ -424,3 +430,4 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
+
