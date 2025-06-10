@@ -347,9 +347,9 @@ function addBlanketToCart() {
     length: document.getElementById('lengthInput').value,
     width: document.getElementById('widthInput').value,
     quantity: quantity,
-    unit_price: (totalPrice / quantity).toFixed(2),
-    total_price: totalPrice.toFixed(2),
-    image: 'images/blanket-placeholder.jpg', // Update with actual image path if available
+    unit_price: parseFloat((totalPrice / quantity).toFixed(2)),
+    total_price: parseFloat(totalPrice.toFixed(2)),
+    image: 'images/blanket-placeholder.jpg',
     added_at: new Date().toISOString()
   };
 
