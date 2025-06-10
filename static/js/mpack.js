@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadMachines() {
-  fetch("/blankets-data/machine.json")
+  fetch("/static/data/machine.json")
     .then(res => res.json())
     .then(data => {
       const machineSelect = document.getElementById("machineSelect");
@@ -366,7 +366,7 @@ function showDiscountSection(apply) {
   }
 
   // Load discount options
-  fetch("/blankets-data/discount.json")
+  fetch("/static/data/discount.json")
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById("discountSelect");
