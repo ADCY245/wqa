@@ -281,8 +281,7 @@ function applyDiscount() {
     const discountedPriceElement = document.getElementById("discountedPrice");
     if (discountedPriceElement) {
       discountedPriceElement.innerText = `Discounted Price: ₹${finalDiscountedPrice.toFixed(2)}`;
-    }
-  } else {
+    }  } else {
     currentDiscount = 0;
     finalDiscountedPrice = priceWithBar;
   }
@@ -372,31 +371,47 @@ function showDiscountSection() {
 function addBlanketToCart() {
   const blanketSelect = document.getElementById('blanketSelect');
   const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
-  const totalPrice = parseFloat(document.getElementById('finalPrice').textContent.replace('₹', '')) || 0;
+  // Get the final price from the price summary
+  const finalPriceText = document.getElementById('finalPrice').textContent;
+  const totalPrice = parseFloat(finalPriceText.replace(/[^0-9.]/g, '')) || 0;
   
   // Convert the selected value to a number for comparison since our IDs are numbers
   const selectedBlanketId = parseInt(blanketSelect.value);
   const selectedBlanket = blanketData.find(b => b.id === selectedBlanketId);
-  
-  console.log('Selected Blanket ID:', selectedBlanketId);
-  console.log('Available Blankets:', blanketData);
   
   if (!selectedBlanket) {
     showToast('Error', 'Please select a valid blanket', 'error');
     return;
   }
 
+  // Get all the necessary values
+  const machineSelect = document.getElementById('machineSelect');
+  const thicknessSelect = document.getElementById('thicknessSelect');
+  const lengthInput = document.getElementById('lengthInput').value;
+  const widthInput = document.getElementById('widthInput').value;
+  const barSelect = document.getElementById('barSelect');
+  const selectedBar = barData.find(b => b.id === barSelect.value);
+  const barType = selectedBar ? selectedBar.name : 'None';
+  const barPrice = selectedBar ? parseFloat(selectedBar.price) : 0;
+  
+  // Calculate unit price (price per unit before quantity and GST)
+  const unitPrice = parseFloat((totalPrice / quantity).toFixed(2));
+
   const product = {
     id: 'blanket_' + Date.now(),
     type: 'blanket',
     name: selectedBlanket.name,
-    machine: document.getElementById('machineSelect').options[document.getElementById('machineSelect').selectedIndex].text,
-    thickness: document.getElementById('thicknessSelect').value,
-    length: document.getElementById('lengthInput').value,
-    width: document.getElementById('widthInput').value,
+    machine: machineSelect.options[machineSelect.selectedIndex].text,
+    thickness: thicknessSelect.value,
+    length: lengthInput,
+    width: widthInput,
+    bar_type: barType,
+    bar_price: barPrice,
     quantity: quantity,
-    unit_price: parseFloat((totalPrice / quantity).toFixed(2)),
-    total_price: parseFloat(totalPrice.toFixed(2)),
+    unit_price: unitPrice,
+    total_price: totalPrice,
+    discount_percent: currentDiscount,
+    gst_percent: parseFloat(document.getElementById('gstSelect').value) || 0,
     image: 'images/blanket-placeholder.jpg',
     added_at: new Date().toISOString()
   };
@@ -430,4 +445,5 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
+
 
