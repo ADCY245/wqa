@@ -287,13 +287,16 @@ function calculateFinalPrice() {
   // Calculate base price (price per sheet * quantity)
   const basePrice = currentNetPrice * quantity;
   
-  // Calculate GST (12% of base price)
-  const gstAmount = basePrice * 0.12;
+  // Apply discount if any (same as blankets.js)
+  const discountAmount = currentDiscount > 0 ? (basePrice * currentDiscount / 100) : 0;
+  const discountedPrice = basePrice - discountAmount;
   
-  // Calculate final price (base price + GST)
-  const finalPrice = basePrice + gstAmount;
+  // Calculate GST on the discounted price (same as blankets.js)
+  const gstAmount = (discountedPrice * 12) / 100;
+  const finalUnitPrice = discountedPrice + gstAmount;
+  const finalPrice = finalUnitPrice; // For consistency with blankets.js naming
   
-  // Update the price displays
+  // Update the price displays (matching blankets.js format)
   document.getElementById("netPrice").textContent = currentNetPrice.toFixed(2);
   document.getElementById("totalPrice").textContent = basePrice.toFixed(2);
   document.getElementById("gstAmount").textContent = gstAmount.toFixed(2);
@@ -303,35 +306,34 @@ function calculateFinalPrice() {
   document.getElementById("totalPriceSection").style.display = "block";
   document.getElementById("discountPromptSection").style.display = quantity > 0 ? "block" : "none";
   
-  // Apply discount if one is selected
+  // Show discount details if discount is applied (matching blankets.js format)
   if (currentDiscount > 0) {
-    const discountAmount = finalPrice * (currentDiscount / 100);
-    const finalDiscountedPrice = finalPrice - discountAmount;
-    
-    // Show discount details
     const discountDetails = document.getElementById("discountDetails");
     if (discountDetails) {
+      const totalBeforeDiscount = basePrice;
+      const totalAfterDiscount = discountedPrice;
+      
       discountDetails.innerHTML = `
         <div class="price-breakdown">
           <div class="d-flex justify-content-between">
-            <span>Subtotal:</span>
-            <span>₹${basePrice.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span>GST (12%):</span>
-            <span>₹${gstAmount.toFixed(2)}</span>
-          </div>
-          <div class="d-flex justify-content-between border-top mt-2 pt-2">
-            <span>Total before discount:</span>
-            <span>₹${finalPrice.toFixed(2)}</span>
+            <span>Subtotal (${quantity} units):</span>
+            <span>₹${totalBeforeDiscount.toFixed(2)}</span>
           </div>
           <div class="d-flex justify-content-between text-danger">
             <span>Discount (${currentDiscount}%):</span>
             <span>-₹${discountAmount.toFixed(2)}</span>
           </div>
+          <div class="d-flex justify-content-between">
+            <span>After Discount:</span>
+            <span>₹${totalAfterDiscount.toFixed(2)}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>GST (12%):</span>
+            <span>+₹${gstAmount.toFixed(2)}</span>
+          </div>
           <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
             <span>Final Amount:</span>
-            <span>₹${finalDiscountedPrice.toFixed(2)}</span>
+            <span>₹${finalPrice.toFixed(2)}</span>
           </div>
         </div>
       `;
