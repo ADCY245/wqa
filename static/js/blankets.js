@@ -435,7 +435,7 @@ function addBlanketToCart() {
   const finalUnitPrice = discountedPrice + gstAmount;
   const finalTotalPrice = finalUnitPrice * quantity;
 
-  // Create product object for cart
+  // Create product object for cart with all calculated values
   const product = {
     id: 'blanket_' + Date.now(),
     type: 'blanket',
@@ -447,12 +447,29 @@ function addBlanketToCart() {
     bar_type: barType,
     bar_price: barPrice,
     quantity: quantity,
+    
+    // Calculated values
+    ratePerSqMt: selectedBlanket.ratePerSqMt,
+    areaSqM: areaSqM,
+    basePrice: basePrice,
+    pricePerUnit: priceWithBar,
+    subtotal: priceWithBar * quantity,
+    discount_amount: discountAmount,
+    discounted_subtotal: discountedPrice * quantity,
+    gst_amount: gstAmount * quantity,
+    
+    // Final prices
     unit_price: finalUnitPrice,
     total_price: finalTotalPrice,
+    
+    // Rates
     discount_percent: currentDiscount,
     gst_percent: gstPercent,
-    image: 'images/blanket-placeholder.jpg',
-    added_at: new Date().toISOString()
+    
+    // Other
+    image: 'images/products/blanket-placeholder.jpg',
+    added_at: new Date().toISOString(),
+    calculation_note: 'All prices include GST'
   };
 
   // Show loading state
@@ -484,4 +501,3 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
-
