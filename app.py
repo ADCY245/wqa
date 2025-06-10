@@ -50,6 +50,17 @@ def cart():
             cart_data['products'] = []
             save_cart(cart_data)
             
+        # Load necessary data for calculations
+        try:
+            with open('static/products/blankets/blankets.json') as f:
+                blanket_data = json.load(f)['products']
+            with open('static/products/blankets/bar.json') as f:
+                bar_data = json.load(f)['bars']
+        except Exception as e:
+            print(f"Error loading calculation data: {e}")
+            blanket_data = []
+            bar_data = []
+            
         # Calculate total price - use the pre-calculated total_price which already includes GST
         total_price = 0
         for item in cart_data['products']:
@@ -78,7 +89,12 @@ def cart():
                 continue
                 
         print(f"\nCalculated total price: {total_price}")  # Debug log
-        return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
+        return render_template('cart.html', 
+            cart=cart_data, 
+            total=round(total_price, 2),
+            blanketData=blanket_data,
+            barData=bar_data
+        )
         
     except Exception as e:
         import traceback
