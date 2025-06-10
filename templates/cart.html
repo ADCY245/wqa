@@ -182,31 +182,24 @@
                                 {% set widthM = item.width / 1000 %}
                                 {% set areaSqM = lengthM * widthM %}
                                 
-                                <!-- Get blanket rate -->
-                                {% set blanket = blanketData|selectattr('id', 'equalto', item.id)|first %}
-                                {% set basePrice = areaSqM * (blanket.ratePerSqMt or 0) %}
-                                
                                 <!-- Display base price -->
                                 <div class="d-flex justify-content-between">
-                                    <span>Base Price ({{ "%.4f"|format(areaSqM) }} m² × ₹{{ blanket.ratePerSqMt or 0 }}/m²):</span>
-                                    <span>₹{{ "%.2f"|format(basePrice) }}</span>
+                                    <span>Base Price ({{ "%.4f"|format(areaSqM) }} m² × ₹{{ item.calculations.ratePerSqMt }}/m²):</span>
+                                    <span>₹{{ "%.2f"|format(item.calculations.basePrice) }}</span>
                                 </div>
                                 
-                                <!-- Get bar data -->
-                                {% set selectedBar = barData|selectattr('name', 'equalto', item.bar_type)|first %}
-                                {% set barPrice = selectedBar.price if selectedBar else 0 %}
-                                
-                                <!-- Add barring price -->
+                                <!-- Show bar price if any -->
+                                {% if item.calculations.bar_price > 0 %}
                                 <div class="d-flex justify-content-between">
-                                    <span>Barring ({{ item.bar_type or 'None' }}):</span>
-                                    <span>+₹{{ "%.2f"|format(barPrice) }}</span>
+                                    <span>Barring ({{ item.bar_type }}):</span>
+                                    <span>+₹{{ "%.2f"|format(item.calculations.bar_price) }}</span>
                                 </div>
+                                {% endif %}
                                 
-                                <!-- Calculate price with bar -->
-                                {% set priceWithBar = basePrice + barPrice %}
+                                <!-- Show price per unit -->
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Price per unit:</span>
-                                    <span>₹{{ "%.2f"|format(priceWithBar) }}</span>
+                                    <span>₹{{ "%.2f"|format(item.calculations.pricePerUnit) }}</span>
                                 </div>
                                 
                                 <!-- Quantity -->
