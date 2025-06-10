@@ -4,7 +4,7 @@ let currentDiscount = 0;
 let currentBarRate = 0;
 
 window.onload = () => {
-  fetch("/static/products/blankets/machine.json")
+  fetch("/static/data/machine.json")
     .then(res => res.json())
     .then(data => {
       machineData = data.machines;
@@ -21,7 +21,7 @@ window.onload = () => {
       });
     });
 
-  fetch("/static/products/blankets/blankets.json")
+  fetch("/static/data/blankets.json")
     .then(res => res.json())
     .then(data => {
       blanketData = data.products;
@@ -424,4 +424,3 @@ function addBlanketToCart() {
     addToCartBtn.innerHTML = originalText;
   });
 }
-
