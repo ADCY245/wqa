@@ -190,18 +190,23 @@
                                 
                                 <!-- Show bar price if selected -->
                                 {% if item.bar_type and item.bar_type != 'None' %}
-                                {% set selectedBar = barData|selectattr('bar', 'equalto', item.bar_type)|first %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type }}):</span>
-                                    <span>+₹{{ "%.2f"|format(selectedBar.barRate) }}</span>
+                                    <span>+₹{{ "%.2f"|format(item.bar_price) }}</span>
                                 </div>
-                                {% endif %}
                                 
-                                <!-- Show price per unit -->
+                                <!-- Show price per unit with bar -->
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Price per unit (with bar):</span>
+                                    <span>₹{{ "%.2f"|format(item.calculations.pricePerUnit) }}</span>
+                                </div>
+                                {% else %}
+                                <!-- Show price per unit without bar -->
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Price per unit:</span>
                                     <span>₹{{ "%.2f"|format(item.calculations.pricePerUnit) }}</span>
                                 </div>
+                                {% endif %}
                                 
                                 <!-- Quantity -->
                                 <div class="d-flex justify-content-between">
