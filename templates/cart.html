@@ -97,7 +97,7 @@
                             {# Calculate base price #}
                             {% set base_price = area_sq_m * rate_per_sq_mt %}
                             
-                            {# Add barring price #}
+                            {# Add barring price to base price #}
                             {% set price_with_bar = base_price + (item.bar_price or 0) %}
                             
                             {# Calculate total before discount #}
@@ -113,16 +113,24 @@
                             
                             <div class="price-breakdown mt-3">
                                 <div class="d-flex justify-content-between">
-                                    <span>Area: {{ "%.4f"|format(area_sq_m) }} m² × {{ item.quantity }} units</span>
-                                    <span>₹{{ "%.2f"|format(base_price * item.quantity) }}</span>
+                                    <span>Area: {{ "%.4f"|format(area_sq_m) }} m²</span>
+                                    <span>₹{{ "%.2f"|format(base_price) }}</span>
                                 </div>
                                 {% if item.bar_price and item.bar_price > 0 %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type or 'Barring' }})</span>
-                                    <span>+₹{{ "%.2f"|format((item.bar_price or 0) * item.quantity) }}</span>
+                                    <span>+₹{{ "%.2f"|format(item.bar_price or 0) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Price per unit:</span>
+                                    <span>₹{{ "%.2f"|format(price_with_bar) }}</span>
                                 </div>
                                 {% endif %}
-                                <div class="d-flex justify-content-between fw-bold">
+                                <div class="d-flex justify-content-between">
+                                    <span>Quantity:</span>
+                                    <span>× {{ item.quantity }} units</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold border-top pt-2">
                                     <span>Subtotal ({{ item.quantity }} units):</span>
                                     <span>₹{{ "%.2f"|format(subtotal_before_discount) }}</span>
                                 </div>
