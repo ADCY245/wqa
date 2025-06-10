@@ -65,20 +65,34 @@ window.onload = () => {
 
   fetch("/static/data/discount.json")
     .then(res => res.json())
-    .then(data => discountData = data.discounts);
+    .then(data => {
+      discountData = data.discounts || [];
+      console.log('Discount data loaded:', discountData);
+    })
+    .catch(error => {
+      console.error('Error loading discount data:', error);
+      discountData = [];
+    });
 
   fetch("/static/data/thickness.json")
     .then(res => res.json())
     .then(data => {
-      thicknessData = data.thicknesses;
+      thicknessData = data.thicknesses || [];
       const select = document.getElementById("thicknessSelect");
-      select.innerHTML = '<option value="">--Select Thickness--</option>';
-      thicknessData.forEach(th => {
-        const opt = document.createElement("option");
-        opt.value = th.value;
-        opt.text = th.label;
-        select.appendChild(opt);
-      });
+      if (select) {
+        select.innerHTML = '<option value="">-- Select Thickness --</option>';
+        thicknessData.forEach(th => {
+          const opt = document.createElement("option");
+          opt.value = th.value;
+          opt.textContent = th.label;
+          select.appendChild(opt);
+        });
+        // Add change event to recalculate price when thickness changes
+        select.addEventListener('change', calculatePrice);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading thickness data:', error);
     });
 
   // Debug: Log when script loads
@@ -316,17 +330,45 @@ function applyGST() {
 }
 
 function showDiscountSection() {
-  const discountSelect = document.getElementById("discountSelect");
-  discountSelect.innerHTML = '<option value="">--Select Discount--</option>';
-  discountData.forEach(d => {
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.text = d;
-    discountSelect.appendChild(opt);
-  });
-  document.getElementById("discountSection").style.display = 'block';
-  document.getElementById("applyDiscountBtn").style.display = 'none';
+  const discountSection = document.getElementById('discountSection');
+  const discountSelect = document.getElementById('discountSelect');
+  
+  if (!discountSection || !discountSelect) {
+    console.error('Discount section or select element not found');
+    return;
+  }
+  
+  // Toggle display
+  const isVisible = discountSection.style.display !== 'none';
+  discountSection.style.display = isVisible ? 'none' : 'block';
+  
+  // Only initialize discount options if showing the section
+  if (!isVisible) {
+    // Clear existing options except the first one
+    while (discountSelect.options.length > 1) {
+      discountSelect.remove(1);
+    }
+    
+    // Add discount options if we have data
+    if (discountData && discountData.length > 0) {
+      discountData.forEach(discount => {
+        const option = new Option(`${discount}%`, discount);
+        discountSelect.add(option);
+      });
+      
+      // Add event listener for discount change
+      discountSelect.onchange = applyDiscount;
+      
+      console.log('Discount options loaded:', discountData);
+    } else {
+      console.warn('No discount data available');
+    }
+  }
+  
+  // Recalculate price when showing/hiding discount
+  calculatePrice();
 }
+
 function addBlanketToCart() {
   const blanketSelect = document.getElementById('blanketSelect');
   const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
