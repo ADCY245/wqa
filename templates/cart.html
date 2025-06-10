@@ -193,19 +193,17 @@
                                 </div>
                                 
                                 <!-- Add barring price -->
-                                {% if item.bar_type and item.bar_type != '' %}
                                 <div class="d-flex justify-content-between">
-                                    <span>Barring ({{ item.bar_type }}):</span>
-                                    <span>+₹{{ "%.2f"|format(item.bar_price) }}</span>
+                                    <span>Barring ({{ item.bar_type or 'None' }}):</span>
+                                    <span>+₹{{ "%.2f"|format(item.bar_price or 0) }}</span>
                                 </div>
                                 
                                 <!-- Calculate price with bar -->
-                                {% set priceWithBar = basePrice + item.bar_price %}
+                                {% set priceWithBar = basePrice + (item.bar_price or 0) %}
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Price per unit:</span>
                                     <span>₹{{ "%.2f"|format(priceWithBar) }}</span>
                                 </div>
-                                {% endif %}
                                 
                                 <!-- Quantity -->
                                 <div class="d-flex justify-content-between">
