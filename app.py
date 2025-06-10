@@ -140,6 +140,29 @@ def add_to_cart():
         product = request.get_json()
         cart = load_cart()
         
+        # Validate required fields for blankets
+        if product.get('type') == 'blanket':
+            required_fields = ['name', 'machine', 'thickness', 'length', 'width', 'quantity', 
+                             'calculations', 'unit_price', 'total_price']
+            missing_fields = [field for field in required_fields if field not in product]
+            if missing_fields:
+                return jsonify({
+                    "success": False, 
+                    "message": f"Missing required fields: {', '.join(missing_fields)}"
+                }), 400
+            
+            # Validate calculations
+            calculations = product.get('calculations', {})
+            required_calc_fields = ['areaSqM', 'ratePerSqMt', 'basePrice', 'pricePerUnit', 
+                                 'subtotal', 'discount_percent', 'discount_amount', 
+                                 'discounted_subtotal', 'gst_percent', 'gst_amount', 'final_price']
+            missing_calc_fields = [field for field in required_calc_fields if field not in calculations]
+            if missing_calc_fields:
+                return jsonify({
+                    "success": False, 
+                    "message": f"Missing calculation fields: {', '.join(missing_calc_fields)}"
+                }), 400
+        
         # Add timestamp and ensure ID exists
         if 'id' not in product:
             product['id'] = str(uuid.uuid4())
