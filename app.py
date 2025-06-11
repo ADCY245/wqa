@@ -1,9 +1,29 @@
-from flask import Flask, render_template, send_from_directory, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, jsonify, flash, session
 from waitress import serve
 import os
 import json
 from datetime import datetime
 import uuid
+
+# For Render deployment - use in-memory storage
+class CartStore:
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.cart = {"products": []}
+        return cls._instance
+    
+    def get_cart(self):
+        return self.cart
+    
+    def save_cart(self, cart):
+        self.cart = cart
+        return True
+
+# Initialize cart store
+cart_store = CartStore()
 
 # Ensure the data directory exists
 os.makedirs('static/data', exist_ok=True)
@@ -108,44 +128,31 @@ def chemicals_data(filename):
 
 def load_cart():
     try:
-        if not os.path.exists(CART_FILE):
-            return {"products": []}
-        with open(CART_FILE, 'r') as f:
-            cart = json.load(f)
-            # Ensure the cart has the products list
-            if 'products' not in cart:
-                cart = {"products": []}
-            return cart
-    except json.JSONDecodeError:
-        # If the file is corrupted, reset it
-        return {"products": []}
+        # For Render, use in-memory store
+        cart = cart_store.get_cart()
+        # Ensure the cart has the products list
+        if 'products' not in cart:
+            cart = {"products": []}
+        return cart
     except Exception as e:
         print(f"Error loading cart: {e}")
         return {"products": []}
 
 def save_cart(cart):
     try:
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(CART_FILE), exist_ok=True)
-        # Write to a temporary file first to prevent corruption
-        temp_file = f"{CART_FILE}.tmp"
-        with open(temp_file, 'w') as f:
-            json.dump(cart, f, indent=2)
-        # Rename the temp file to the actual file (atomic operation)
-        if os.path.exists(CART_FILE):
-            os.replace(temp_file, CART_FILE)
-        else:
-            os.rename(temp_file, CART_FILE)
+        # For Render, use in-memory store
+        return cart_store.save_cart(cart)
     except Exception as e:
         print(f"Error saving cart: {e}")
-        # If there's an error, try to save to a backup file
-        backup_file = f"{CART_FILE}.bak.{int(datetime.now().timestamp())}"
-        try:
-            with open(backup_file, 'w') as f:
-                json.dump(cart, f, indent=2)
-            print(f"Cart backup saved to {backup_file}")
-        except Exception as backup_error:
-            print(f"Failed to save backup: {backup_error}")
+        # For local development, you can uncomment the backup code
+        # backup_file = f"{CART_FILE}.bak.{int(datetime.now().timestamp())}"
+        # try:
+        #     with open(backup_file, 'w') as f:
+        #         json.dump(cart, f, indent=2)
+        #     print(f"Cart backup saved to {backup_file}")
+        # except Exception as backup_error:
+        #     print(f"Failed to save backup: {backup_error}")
+        return False
 
 from flask import request, jsonify
 
