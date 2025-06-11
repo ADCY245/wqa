@@ -411,9 +411,11 @@ function addBlanketToCart() {
   }
   
   // Get barring information
-  const selectedBar = barData.find(b => b.id === barSelect.value);
-  const barType = selectedBar ? selectedBar.name : 'None';
-  const barPrice = selectedBar ? parseFloat(selectedBar.price) : 0;
+  const selectedBar = barData.find(b => b.bar === barSelect.options[barSelect.selectedIndex]?.text);
+  const barType = selectedBar ? selectedBar.bar : 'None';
+  const barPrice = selectedBar ? parseFloat(selectedBar.barRate || selectedBar.price || 0) : 0;
+  
+  console.log('Bar info:', { selectedBar, barType, barPrice });
   
   // Convert dimensions to meters for calculation
   const lengthM = convertToMeters(length, unit);
@@ -472,7 +474,11 @@ function addBlanketToCart() {
     added_at: new Date().toISOString()
   };
   
-  console.log('Adding to cart with pre-calculated values:', JSON.stringify(product, null, 2));
+  console.log('Adding to cart with pre-calculated values:', JSON.stringify({
+    ...product,
+    // Don't log the entire calculations object to keep console clean
+    calculations: { ...product.calculations, barPrice: product.calculations.barPrice }
+  }, null, 2));
 
   // Show loading state
   const addToCartBtn = event.target;
