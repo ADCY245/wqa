@@ -1,30 +1,51 @@
-// Cart functionality for all pages
+function calculateItemPrices(item) {
+    if (item.type === 'mpack') {
+        const price = parseFloat(item.unit_price) || 0;
+        const quantity = parseInt(item.quantity) || 1;
+        const discountPercent = parseFloat(item.discount_percent) || 0;
+        const gstPercent = parseFloat(item.gst_percent) || 18;
+        
+        const discountAmount = (price * discountPercent / 100);
+        const priceAfterDiscount = price - discountAmount;
+        const gstAmount = (priceAfterDiscount * gstPercent / 100);
+        const finalUnitPrice = priceAfterDiscount + gstAmount;
+        const finalTotal = finalUnitPrice * quantity;
+        
+        item.calculations = {
+            unitPrice: parseFloat(price.toFixed(2)),
+            quantity: quantity,
+            discountPercent: discountPercent,
+            discountAmount: parseFloat(discountAmount.toFixed(2)),
+            priceAfterDiscount: parseFloat(priceAfterDiscount.toFixed(2)),
+            gstPercent: gstPercent,
+            gstAmount: parseFloat(gstAmount.toFixed(2)),
+            finalUnitPrice: parseFloat(finalUnitPrice.toFixed(2)),
+            finalTotal: parseFloat(finalTotal.toFixed(2))
+        };
+    }
+    
+    return item;
+}
 
-// Function to add item to cart
 function addToCart(item) {
-    // Show loading state
+    item = calculateItemPrices(item);
     const addToCartBtn = event.target;
     const originalText = addToCartBtn.innerHTML;
+    
     addToCartBtn.disabled = true;
     addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
 
-    // Send the item to the server
     fetch('/add_to_cart', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
             showToast('Success', 'Item added to cart!', 'success');
-            // Update cart count
             updateCartCount();
         } else {
-            // Show error message
             showToast('Error', data.message || 'Failed to add item to cart', 'error');
         }
     })
@@ -33,7 +54,6 @@ function addToCart(item) {
         showToast('Error', 'An error occurred while adding to cart', 'error');
     })
     .finally(() => {
-        // Reset button state
         addToCartBtn.disabled = false;
         addToCartBtn.innerHTML = originalText;
     });
