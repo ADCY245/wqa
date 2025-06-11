@@ -1,7 +1,11 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
   padding: 2rem;
-  background-color: #f9f9f9;
+  min-height: 100vh;
+  background: linear-gradient(to right, #fff8e1, #e0caa9);
+  background-attachment: fixed;
+  background-size: cover;
 }
 
 select,
