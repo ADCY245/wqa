@@ -226,36 +226,14 @@
                                 </div>
                             </div>
                             
-                            <!-- Price and Actions -->
-                            <div class="col-12 mt-3 pt-3 border-top">
-                                <div class="row g-3">
-                                    <div class="col-12 col-sm-4">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="text-muted">Unit Price:</span>
-                                            <span class="fw-bold">₹{{ "%.2f"|format(item.calculations.pricePerUnit|default(0)) }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-sm-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="text-muted">Quantity:</span>
-                                            <span class="fw-bold">{{ item.quantity|default(1) }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-sm-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="text-muted">Subtotal:</span>
-                                            <span class="fw-bold">₹{{ "%.2f"|format((item.calculations.pricePerUnit|default(0)) * (item.quantity|default(1))) }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-sm-2 text-end">
-                                        <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
-                                            <input type="hidden" name="product_id" value="{{ item.id }}">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100" title="Remove item">
-                                                <i class="fas fa-trash"></i> Remove
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                            <!-- Remove Button -->
+                            <div class="col-12 mt-3 pt-3 border-top text-end">
+                                <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </form>
                             </div>
                         </div>
                         
