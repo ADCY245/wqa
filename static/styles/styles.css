@@ -1,11 +1,18 @@
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+html, body {
   margin: 0;
-  padding: 2rem;
+  padding: 0;
+  width: 100%;
   min-height: 100vh;
-  background: linear-gradient(to right, #fff8e1, #e0caa9);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #fff8e1 0%, #e0caa9 100%);
   background-attachment: fixed;
+  background-repeat: no-repeat;
   background-size: cover;
+  padding: 2rem 0;
+  min-height: 100vh;
 }
 
 select,
