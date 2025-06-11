@@ -245,10 +245,10 @@
                                  data-discount-percent="{{ item.discount_percent|default(0) }}"
                                  data-gst-percent="{{ item.gst_percent|default(18) }}">
                                 
-                                <h5>Underpacking Material</h5>
-                                <p class="mb-1"><strong>Product Type:</strong> MPack</p>
-                                <p class="mb-1"><strong>Type:</strong> {{ item.thickness|default('N/A') }}</p>
+                                <h5>MPack</h5>
+                                <p class="mb-1"><strong>Product Type:</strong> Underpacking Material</p>
                                 {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
+                                <p class="mb-1"><strong>Thickness:</strong> {{ item.thickness|default('N/A') }}</p>
                                 {% if item.size %}<p class="mb-1"><strong>Size:</strong> {{ item.size }}</p>{% endif %}
                                 
                                 <div class="price-breakdown mt-2 p-2 bg-light rounded">
