@@ -106,6 +106,7 @@
                                         <p class="mb-1"><strong>Product Type:</strong> Blanket</p>
                                         {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
                                         {% if item.thickness %}<p class="mb-1"><strong>Thickness:</strong> {{ item.thickness }} mm</p>{% endif %}
+                                        {% if item.bar_type and item.bar_type|lower != 'none' %}<p class="mb-1"><strong>Bar Type:</strong> {{ item.bar_type }}</p>{% endif %}
                                         {% if item.length and item.width %}<p class="mb-2"><strong>Dimensions:</strong> {{ item.length }} x {{ item.width }} mm</p>{% endif %}
                                     </div>
                                     {% if item.image %}
@@ -149,15 +150,15 @@
                                     </div>
                                     
                                     <!-- Discount Section -->
-                                    {% if item.discount_percent and item.discount_percent > 0 %}
+                                    {% if item.calculations.discount_percent and item.calculations.discount_percent > 0 %}
                                     <div class="discount-row mt-2 pt-2 border-top">
                                         <div class="d-flex justify-content-between text-danger">
-                                            <span>Discount ({{ item.discount_percent|default(0) }}%):</span>
-                                            <span>- ₹<span class="discount-amount">{{ "%.2f"|format((item.calculations.pricePerUnit|default(0) * item.quantity|default(1) * item.discount_percent|default(0) / 100)) }}</span></span>
+                                            <span>Discount ({{ item.calculations.discount_percent|default(0) }}%):</span>
+                                            <span>- ₹<span class="discount-amount">{{ "%.2f"|format(item.calculations.discount_amount|default(0)) }}</span></span>
                                         </div>
                                         <div class="d-flex justify-content-between fw-bold">
                                             <span>After Discount:</span>
-                                            <span>₹<span class="after-discount">{{ "%.2f"|format((item.calculations.pricePerUnit|default(0) * item.quantity|default(1)) * (1 - (item.discount_percent|default(0) / 100))) }}</span></span>
+                                            <span>₹<span class="after-discount">{{ "%.2f"|format(item.calculations.discounted_subtotal|default(0)) }}</span></span>
                                         </div>
                                     </div>
                                     {% else %}
@@ -283,3 +284,4 @@
     </style>
 </body>
 </html>
+
