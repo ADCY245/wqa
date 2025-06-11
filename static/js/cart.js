@@ -305,8 +305,9 @@ function calculateBlanketPrices(container) {
         const barSubtotal = barPrice * quantity;
         const subtotal = baseSubtotal + barSubtotal;
         
-        const discountAmount = baseSubtotal * (discountPercent / 100); // Discount only on base price
-        const priceAfterDiscount = baseSubtotal - discountAmount + barSubtotal; // Add bar price after discount
+        // Calculate discount on the total unit price (base + bar)
+        const discountAmount = subtotal * (discountPercent / 100);
+        const priceAfterDiscount = subtotal - discountAmount;
         const gstAmount = (priceAfterDiscount * gstPercent) / 100;
         const finalTotal = priceAfterDiscount + gstAmount;
         
