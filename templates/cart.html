@@ -98,18 +98,42 @@ Has Calculations: {{ 'Yes' if cart.products[0].calculations else 'No' }}</pre>
                             <!-- Get the calculations object or create an empty one -->
                             {% set calc = item.calculations or {} %}
                             
-                            <!-- Get all values with safe defaults -->
+                            <!-- Calculate area in square meters -->
                             {% set area_sqm = (item.length|default(0) * item.width|default(0)) / 1000000 %}
+                            
+                            <!-- Get all values with safe defaults -->
                             {% set rate_per_sqm = calc.ratePerSqMt|default(0) %}
                             {% set base_price = area_sqm * rate_per_sqm %}
+                            
+                            <!-- Get barring information -->
                             {% set bar_price = item.bar_price|default(0) %}
-                            {% set price_with_bar = (calc.pricePerUnit|default(0)) or (base_price + bar_price) %}
+                            {% set bar_type = item.bar_type|default('None') %}
+                            
+                            <!-- Calculate prices -->
+                            {% set price_with_bar = base_price + bar_price %}
                             {% set discount_percent = calc.discount_percent|default(0) %}
                             {% set discount_amount = (price_with_bar * discount_percent / 100) %}
-                            {% set gst_percent = calc.gst_percent|default(12) %}
-                            {% set gst_amount = (price_with_bar - discount_amount) * (gst_percent / 100) %}
-                            {% set final_unit_price = price_with_bar - discount_amount + gst_amount %}
+                            {% set price_after_discount = price_with_bar - discount_amount %}
+                            {% set gst_percent = calc.gst_percent|default(18) %}
+                            {% set gst_amount = (price_after_discount * gst_percent / 100) %}
+                            {% set final_unit_price = price_after_discount + gst_amount %}
                             {% set final_total = final_unit_price * item.quantity|default(1) %}
+                            
+                            <!-- Debug output -->
+                            <!-- 
+                            area_sqm: {{ area_sqm }}
+                            rate_per_sqm: {{ rate_per_sqm }}
+                            base_price: {{ base_price }}
+                            bar_price: {{ bar_price }}
+                            price_with_bar: {{ price_with_bar }}
+                            discount_percent: {{ discount_percent }}
+                            discount_amount: {{ discount_amount }}
+                            price_after_discount: {{ price_after_discount }}
+                            gst_percent: {{ gst_percent }}
+                            gst_amount: {{ gst_amount }}
+                            final_unit_price: {{ final_unit_price }}
+                            final_total: {{ final_total }}
+                            -->
                             
                             <!-- Product Details -->
                             <div class="product-details mb-3">
@@ -134,24 +158,30 @@ Has Calculations: {{ 'Yes' if cart.products[0].calculations else 'No' }}</pre>
                                     <span>₹{{ "%.2f"|format(base_price) }}</span>
                                 </div>
                                 
-                                <!-- Barring Cost -->
-                                {% if item.bar_type and item.bar_type != 'None' %}
+                                <!-- Barring Cost - Only show if barring is selected -->
+                                {% if bar_type and bar_type != 'None' and bar_type != 'No Barring' %}
                                 <div class="d-flex justify-content-between">
-                                    <span>Barring ({{ item.bar_type }})</span>
+                                    <span>Barring ({{ bar_type }})</span>
                                     <span>+₹{{ "%.2f"|format(bar_price) }}</span>
                                 </div>
                                 {% endif %}
                                 
                                 <!-- Price per unit -->
                                 <div class="d-flex justify-content-between fw-bold">
-                                    <span>Price per unit:</span>
-                                    <span>₹{{ "%.2f"|format(price_with_bar) }}</span>
+                                    <span>Price per unit (before tax):</span>
+                                    <span>₹{{ "%.2f"|format(price_after_discount) }}</span>
                                 </div>
                                 
                                 <!-- Quantity -->
                                 <div class="d-flex justify-content-between">
                                     <span>Quantity:</span>
                                     <span>× {{ item.quantity }} units</span>
+                                </div>
+                                
+                                <!-- Subtotal -->
+                                <div class="d-flex justify-content-between fw-bold border-top pt-2">
+                                    <span>Subtotal ({{ item.quantity }} units):</span>
+                                    <span>₹{{ "%.2f"|format(price_with_bar * item.quantity) }}</span>
                                 </div>
                                 
                                 <!-- Subtotal -->
@@ -168,7 +198,7 @@ Has Calculations: {{ 'Yes' if cart.products[0].calculations else 'No' }}</pre>
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>After Discount:</span>
-                                    <span>₹{{ "%.2f"|format((price_with_bar - discount_amount) * item.quantity) }}</span>
+                                    <span>₹{{ "%.2f"|format(price_after_discount * item.quantity) }}</span>
                                 </div>
                                 {% endif %}
                                 
