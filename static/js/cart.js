@@ -181,47 +181,124 @@ function calculateBlanketPrices(container) {
 
 // Calculate MPack prices
 function calculateMPackPrices(container) {
-    // Get data attributes
-    const unitPrice = parseFloat(container.dataset.unitPrice) || 0;
-    const quantity = parseInt(container.dataset.quantity) || 1;
-    const discountPercent = parseFloat(container.dataset.discountPercent) || 0;
-    const gstPercent = parseFloat(container.dataset.gstPercent) || 18;
-    
-    // Calculate prices
-    const subtotal = unitPrice * quantity;
-    const discountAmount = subtotal * (discountPercent / 100);
-    const priceAfterDiscount = subtotal - discountAmount;
-    const gstAmount = (priceAfterDiscount * gstPercent) / 100;
-    const finalTotal = priceAfterDiscount + gstAmount;
-    
-    // Update UI
-    container.querySelector('.unit-price').textContent = unitPrice.toFixed(2);
-    container.querySelector('.quantity').textContent = quantity;
-    
-    // Handle discount display
-    const discountRow = container.querySelector('.discount-row');
-    if (discountPercent > 0) {
-        discountRow.classList.remove('d-none');
-        container.querySelector('.discount-percent').textContent = discountPercent;
-        container.querySelector('.discount-amount').textContent = discountAmount.toFixed(2);
-        container.querySelector('.after-discount').textContent = priceAfterDiscount.toFixed(2);
-    } else {
-        discountRow.classList.add('d-none');
+    try {
+        console.log('Calculating MPack prices for container:', container);
+        
+        // Get data attributes
+        const unitPrice = parseFloat(container.dataset.unitPrice) || 0;
+        const quantity = parseInt(container.dataset.quantity) || 1;
+        const discountPercent = parseFloat(container.dataset.discountPercent) || 0;
+        const gstPercent = parseFloat(container.dataset.gstPercent) || 18;
+        
+        console.log('Raw values:', { unitPrice, quantity, discountPercent, gstPercent });
+        
+        // Calculate prices
+        const subtotal = unitPrice * quantity;
+        const discountAmount = subtotal * (discountPercent / 100);
+        const priceAfterDiscount = subtotal - discountAmount;
+        const gstAmount = (priceAfterDiscount * gstPercent) / 100;
+        const finalTotal = priceAfterDiscount + gstAmount;
+        
+        console.log('Calculated values:', { subtotal, discountAmount, priceAfterDiscount, gstAmount, finalTotal });
+        
+        // Update UI - Unit Price
+        const unitPriceEl = container.querySelector('.unit-price');
+        if (unitPriceEl) {
+            unitPriceEl.textContent = unitPrice.toFixed(2);
+            console.log('Updated unit price to:', unitPrice.toFixed(2));
+        } else {
+            console.error('Unit price element not found');
+        }
+        
+        // Update Quantity
+        const quantityEl = container.querySelector('.quantity');
+        if (quantityEl) {
+            quantityEl.textContent = quantity;
+            console.log('Updated quantity to:', quantity);
+        } else {
+            console.error('Quantity element not found');
+        }
+        
+        // Show quantity calculation
+        const quantityRow = container.querySelector('.quantity-calculation');
+        if (quantityRow) {
+            quantityRow.classList.remove('d-none');
+            const unitPriceDisplay = quantityRow.querySelector('.unit-price-display');
+            const quantityDisplay = quantityRow.querySelector('.quantity-display');
+            const subtotalDisplay = quantityRow.querySelector('.subtotal-before-discount');
+            
+            if (unitPriceDisplay && quantityDisplay && subtotalDisplay) {
+                unitPriceDisplay.textContent = unitPrice.toFixed(2);
+                quantityDisplay.textContent = quantity;
+                subtotalDisplay.textContent = subtotal.toFixed(2);
+                console.log('Updated quantity calculation row');
+            } else {
+                console.error('One or more quantity calculation elements not found');
+            }
+        } else {
+            console.error('Quantity row not found');
+        }
+        
+        // Handle discount display
+        const discountRow = container.querySelector('.discount-row');
+        if (discountRow) {
+            if (discountPercent > 0) {
+                discountRow.classList.remove('d-none');
+                const discountPercentEl = container.querySelector('.discount-percent');
+                const discountAmountEl = container.querySelector('.discount-amount');
+                const afterDiscountEl = container.querySelector('.after-discount');
+                
+                if (discountPercentEl && discountAmountEl && afterDiscountEl) {
+                    discountPercentEl.textContent = discountPercent;
+                    discountAmountEl.textContent = discountAmount.toFixed(2);
+                    afterDiscountEl.textContent = priceAfterDiscount.toFixed(2);
+                    console.log('Updated discount row');
+                } else {
+                    console.error('One or more discount elements not found');
+                }
+            } else {
+                discountRow.classList.add('d-none');
+                console.log('No discount to display');
+            }
+        } else {
+            console.error('Discount row not found');
+        }
+        
+        // Update GST and total
+        const gstPercentEl = container.querySelector('.gst-percent');
+        const gstAmountEl = container.querySelector('.gst-amount');
+        const finalTotalEl = container.querySelector('.final-total');
+        
+        if (gstPercentEl && gstAmountEl && finalTotalEl) {
+            gstPercentEl.textContent = gstPercent;
+            gstAmountEl.textContent = gstAmount.toFixed(2);
+            finalTotalEl.textContent = finalTotal.toFixed(2);
+            console.log('Updated GST and total');
+        } else {
+            console.error('One or more total calculation elements not found');
+        }
+        
+        console.log('Finished calculating MPack prices');
+    } catch (error) {
+        console.error('Error in calculateMPackPrices:', error);
     }
-    
-    // Update GST and total
-    container.querySelector('.gst-percent').textContent = gstPercent;
-    container.querySelector('.gst-amount').textContent = gstAmount.toFixed(2);
-    container.querySelector('.final-total').textContent = finalTotal.toFixed(2);
 }
 
-// Initialize cart and calculations when page loads
+// Initialize price calculations when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-    updateCartCount();
+    console.log('DOM fully loaded, initializing price calculations...');
     
-    // Initialize price calculations for all products
-    document.querySelectorAll('.price-breakdown').forEach(container => {
+    // Calculate prices for all price breakdowns
+    const priceContainers = document.querySelectorAll('.price-breakdown');
+    console.log(`Found ${priceContainers.length} price containers to calculate`);
+    
+    priceContainers.forEach((container, index) => {
+        console.log(`Calculating prices for container ${index + 1}`, container);
         calculateProductPrices(container);
     });
+    
+    // Log if no containers were found
+    if (priceContainers.length === 0) {
+        console.warn('No price containers found on the page');
+    }
 });
-
