@@ -158,14 +158,14 @@
                                     {% set gst_percent = item.calculations.gst_percent|default(18) %}
                                     
                                     {% set subtotal_before_discount = unit_price * quantity %}
-                                    {% set discount_amount = (base_price * quantity * discount_percent / 100) %}
-                                    {% set subtotal_after_discount = (base_price * quantity) - discount_amount + (bar_price * quantity) %}
+                                    {% set discount_amount = (unit_price * quantity * discount_percent / 100) %}
+                                    {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
                                     
                                     <!-- Discount Section -->
                                     {% if discount_percent > 0 %}
                                     <div class="discount-row mt-2 pt-2 border-top">
                                         <div class="d-flex justify-content-between text-danger">
-                                            <span>Discount ({{ discount_percent }}% on base price):</span>
+                                            <span>Discount ({{ discount_percent }}%):</span>
                                             <span>- ₹<span class="discount-amount">{{ "%.2f"|format(discount_amount) }}</span></span>
                                         </div>
                                         <div class="d-flex justify-content-between fw-bold">
