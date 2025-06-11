@@ -151,17 +151,21 @@
                                     
                                     <!-- Discount Section -->
                                     {% if item.calculations.discount_percent and item.calculations.discount_percent > 0 %}
+                                    {% set subtotal_before_discount = item.calculations.pricePerUnit * item.quantity %}
+                                    {% set discount_amount = (subtotal_before_discount * item.calculations.discount_percent / 100) %}
+                                    {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
                                     <div class="discount-row mt-2 pt-2 border-top">
                                         <div class="d-flex justify-content-between text-danger">
                                             <span>Discount ({{ item.calculations.discount_percent|default(0) }}%):</span>
-                                            <span>- ₹<span class="discount-amount">{{ "%.2f"|format(item.calculations.discount_amount|default(0)) }}</span></span>
+                                            <span>- ₹<span class="discount-amount">{{ "%.2f"|format(discount_amount) }}</span></span>
                                         </div>
                                         <div class="d-flex justify-content-between fw-bold">
                                             <span>After Discount:</span>
-                                            <span>₹<span class="after-discount">{{ "%.2f"|format(item.calculations.discounted_subtotal|default(0)) }}</span></span>
+                                            <span>₹<span class="after-discount">{{ "%.2f"|format(subtotal_after_discount) }}</span></span>
                                         </div>
                                     </div>
                                     {% else %}
+                                    {% set subtotal_after_discount = item.calculations.pricePerUnit * item.quantity %}
                                     <div class="discount-row d-none"></div>
                                     {% endif %}
                                     
@@ -169,7 +173,7 @@
                                     <div class="mt-2 pt-2 border-top">
                                         <div class="d-flex justify-content-between">
                                             <span>GST ({{ item.gst_percent|default(18) }}%):</span>
-                                            <span>+ ₹<span class="gst-amount">{{ "%.2f"|format((item.calculations.pricePerUnit|default(0) * item.quantity|default(1) * (1 - (item.discount_percent|default(0) / 100)) * item.gst_percent|default(18) / 100)) }}</span></span>
+                                            <span>+ ₹<span class="gst-amount">{{ "%.2f"|format((subtotal_after_discount * item.gst_percent|default(18) / 100)) }}</span></span>
                                         </div>
                                         
                                         <div class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 border-top">
