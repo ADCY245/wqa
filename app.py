@@ -89,19 +89,36 @@ def cart():
                 product['added_at'] = datetime.now().isoformat()
                 
             # Ensure calculations exist for MPack products
-            if product.get('type') == 'mpack' and 'calculations' not in product:
-                print(f"[CART ROUTE] Adding missing calculations for MPack product")
+            if product.get('type') == 'mpack':
+                print(f"[CART ROUTE] Processing MPack product: {product.get('name')}")
+                # Ensure all required fields exist
+                product['unit_price'] = product.get('unit_price', 0)
+                product['quantity'] = product.get('quantity', 1)
+                product['discount_percent'] = product.get('discount_percent', 0)
+                product['gst_percent'] = product.get('gst_percent', 12)
+                
+                # Calculate derived values
+                subtotal = product['unit_price'] * product['quantity']
+                discount_amount = subtotal * (product['discount_percent'] / 100)
+                price_after_discount = subtotal - discount_amount
+                gst_amount = (price_after_discount * product['gst_percent']) / 100
+                final_total = price_after_discount + gst_amount
+                
+                # Update product with calculations
                 product['calculations'] = {
-                    'unitPrice': product.get('unit_price', 0),
-                    'quantity': product.get('quantity', 1),
-                    'subtotal': product.get('unit_price', 0) * product.get('quantity', 1),
-                    'discountPercent': product.get('discount_percent', 0),
-                    'discountAmount': product.get('discount_amount', 0),
-                    'priceAfterDiscount': (product.get('unit_price', 0) * product.get('quantity', 1)) - product.get('discount_amount', 0),
-                    'gstPercent': product.get('gst_percent', 12),
-                    'gstAmount': product.get('gst_amount', 0),
-                    'finalTotal': product.get('total_price', 0)
+                    'unitPrice': product['unit_price'],
+                    'quantity': product['quantity'],
+                    'subtotal': subtotal,
+                    'discountPercent': product['discount_percent'],
+                    'discountAmount': discount_amount,
+                    'priceAfterDiscount': price_after_discount,
+                    'gstPercent': product['gst_percent'],
+                    'gstAmount': gst_amount,
+                    'finalTotal': final_total
                 }
+                
+                # Update the product's total_price to match the calculated final total
+                product['total_price'] = final_total
                 
         # Save any updates
         save_cart(cart_data)
