@@ -301,19 +301,26 @@ function calculateBlanketPrices(container) {
         console.log('Raw values:', { area, rate, basePrice, barPrice, quantity, discountPercent, gstPercent });
         
         // Calculate prices
-        const subtotal = basePrice * quantity;
-        const discountAmount = subtotal * (discountPercent / 100);
-        const priceAfterDiscount = subtotal - discountAmount;
+        const baseSubtotal = basePrice * quantity;
+        const barSubtotal = barPrice * quantity;
+        const subtotal = baseSubtotal + barSubtotal;
+        
+        const discountAmount = baseSubtotal * (discountPercent / 100); // Discount only on base price
+        const priceAfterDiscount = baseSubtotal - discountAmount + barSubtotal; // Add bar price after discount
         const gstAmount = (priceAfterDiscount * gstPercent) / 100;
-        const finalTotal = priceAfterDiscount + gstAmount + (barPrice * quantity);
+        const finalTotal = priceAfterDiscount + gstAmount;
         
         console.log('Calculated values:', { subtotal, discountAmount, priceAfterDiscount, gstAmount, finalTotal });
         
-        // Update UI - Base Price
+        // Update UI - Base Price and Bar Price
         const areaEl = container.querySelector('.area');
         const rateEl = container.querySelector('.rate');
         const basePriceEl = container.querySelector('.base-price');
+        const barPriceEl = container.querySelector('.bar-price');
+        const barPriceRow = container.querySelector('.bar-price-row');
+        const unitPriceEl = container.querySelector('.unit-price');
         
+        // Update base price display
         if (areaEl && rateEl && basePriceEl) {
             areaEl.textContent = area.toFixed(2);
             rateEl.textContent = rate.toFixed(2);
@@ -323,16 +330,24 @@ function calculateBlanketPrices(container) {
             console.error('One or more base price elements not found');
         }
         
-        // Update Bar Price if exists
-        const barPriceEl = container.querySelector('.bar-price');
-        const barPriceRow = container.querySelector('.bar-price-row');
-        
+        // Update bar price display if it exists
         if (barPrice > 0 && barPriceEl && barPriceRow) {
             barPriceRow.classList.remove('d-none');
             barPriceEl.textContent = (barPrice * quantity).toFixed(2);
             console.log('Updated bar price row');
         } else if (barPriceRow) {
             barPriceRow.classList.add('d-none');
+        }
+        
+        // Update unit price display
+        if (unitPriceEl) {
+            unitPriceEl.textContent = (basePrice + barPrice).toFixed(2);
+        }
+        
+        // Update after discount amount
+        const afterDiscountEl = container.querySelector('.after-discount');
+        if (afterDiscountEl) {
+            afterDiscountEl.textContent = priceAfterDiscount.toFixed(2);
         }
         
         // Update Quantity
@@ -347,8 +362,8 @@ function calculateBlanketPrices(container) {
         // Update Subtotal
         const subtotalEl = container.querySelector('.subtotal');
         if (subtotalEl) {
-            subtotalEl.textContent = (basePrice * quantity).toFixed(2);
-            console.log('Updated subtotal to:', (basePrice * quantity).toFixed(2));
+            subtotalEl.textContent = (basePrice * quantity + barPrice * quantity).toFixed(2);
+            console.log('Updated subtotal to:', (basePrice * quantity + barPrice * quantity).toFixed(2));
         } else {
             console.error('Subtotal element not found');
         }
