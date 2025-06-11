@@ -433,7 +433,6 @@ function addMpackToCart() {
   const sizeSelect = document.getElementById('sizeSelect');
   const sheetInput = document.getElementById('sheetInput');
   const quantity = parseInt(sheetInput.value) || 1;
-  const totalPrice = parseFloat(document.getElementById('finalPrice').textContent.replace('₹', '')) || 0;
   
   if (!machineSelect.value || !thicknessSelect.value || !sizeSelect.value || !sheetInput.value) {
     showToast('Error', 'Please fill in all required fields', 'error');
@@ -448,19 +447,19 @@ function addMpackToCart() {
   let unitPrice = parseFloat(document.getElementById('netPrice').textContent) || 0;
   let totalPriceBeforeDiscount = unitPrice * quantity;
   let discountAmount = (totalPriceBeforeDiscount * discount) / 100;
-  let finalPrice = totalPriceBeforeDiscount - discountAmount;
+  let priceAfterDiscount = totalPriceBeforeDiscount - discountAmount;
   
-  // Add GST (assuming 12% as per the form)
+  // Add GST (12% as per the form)
   const gstRate = 0.12;
-  const gstAmount = finalPrice * gstRate;
-  finalPrice += gstAmount;
+  const gstAmount = priceAfterDiscount * gstRate;
+  const finalPrice = priceAfterDiscount + gstAmount;
 
   const product = {
     id: 'mpack_' + Date.now(),
     type: 'mpack',
     name: 'Underpacking Material',
     machine: machineSelect.options[machineSelect.selectedIndex].text,
-    thickness: thicknessSelect.value, // Removed 'micron' as it's added in the template
+    thickness: thicknessSelect.value + ' micron',
     size: sizeSelect.options[sizeSelect.selectedIndex].text,
     quantity: quantity,
     unit_price: parseFloat(unitPrice.toFixed(2)),
@@ -470,7 +469,18 @@ function addMpackToCart() {
     gst_amount: parseFloat(gstAmount.toFixed(2)),
     gst_percent: 12,
     image: 'images/mpack-placeholder.jpg',
-    added_at: new Date().toISOString()
+    added_at: new Date().toISOString(),
+    calculations: {
+      unitPrice: parseFloat(unitPrice.toFixed(2)),
+      quantity: quantity,
+      subtotal: parseFloat(totalPriceBeforeDiscount.toFixed(2)),
+      discountPercent: discount,
+      discountAmount: parseFloat(discountAmount.toFixed(2)),
+      priceAfterDiscount: parseFloat(priceAfterDiscount.toFixed(2)),
+      gstPercent: 12,
+      gstAmount: parseFloat(gstAmount.toFixed(2)),
+      finalTotal: parseFloat(finalPrice.toFixed(2))
+    }
   };
 
   // Show loading state
