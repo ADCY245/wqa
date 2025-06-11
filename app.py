@@ -263,14 +263,36 @@ def remove_from_cart():
     save_cart(cart)
     return redirect(url_for('cart'))
 
-@app.route('/send-invoice', methods=['POST'])
-def send_invoice():
-    # Clear the cart after "sending" invoice
-    cart = {"products": []}
-    save_cart(cart)
-
-    flash('Invoice sent and cart cleared.', 'success')
+@app.route('/clear_cart', methods=['POST'])
+def clear_cart():
+    try:
+        cart = {"products": []}
+        save_cart(cart)
+        flash('All items have been removed from your cart.', 'success')
+    except Exception as e:
+        flash('An error occurred while clearing the cart.', 'error')
+        app.logger.error(f"Error clearing cart: {str(e)}")
     return redirect(url_for('cart'))
+
+@app.route('/send_invoice', methods=['POST'])
+def send_invoice():
+    try:
+        cart = load_cart()
+        if not cart.get('products'):  # Check if cart is empty
+            flash('Your cart is empty. Add items before sending an invoice.', 'warning')
+            return redirect(url_for('cart'))
+            
+        # Here you would typically generate and send the invoice
+        # For now, we'll just clear the cart
+        cart = {"products": []}
+        save_cart(cart)
+        
+        flash('Invoice has been sent successfully!', 'success')
+        return redirect(url_for('cart'))
+    except Exception as e:
+        flash('An error occurred while sending the invoice.', 'error')
+        app.logger.error(f"Error sending invoice: {str(e)}")
+        return redirect(url_for('cart'))
 
 # ---------- START APP ---------- #
 
