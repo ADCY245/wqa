@@ -35,66 +35,56 @@ def mpack():
 @app.route('/cart')
 def cart():
     try:
-        print("Loading cart data...")  # Debug log
-        cart_data = load_cart()
-        print(f"Cart data: {cart_data}")  # Debug log
+        print("\n=== [CART ROUTE] Loading cart data ===")
         
+        # Load cart data
+        cart_data = load_cart()
+        print(f"[CART ROUTE] Raw cart data from file: {cart_data}")
+        
+        # Initialize cart if it doesn't exist
         if cart_data is None:
-            print("Cart data is None, initializing empty cart")
+            print("[CART ROUTE] Cart data is None, initializing empty cart")
             cart_data = {"products": []}
             save_cart(cart_data)
         
         # Ensure products is a list
         if not isinstance(cart_data.get('products'), list):
-            print("Products is not a list, initializing empty list")  # Debug log
+            print(f"[CART ROUTE] Products is not a list (type: {type(cart_data.get('products'))}), initializing empty list")
             cart_data['products'] = []
             save_cart(cart_data)
+        
+        # Debug output
+        print(f"[CART ROUTE] Number of products in cart: {len(cart_data.get('products', []))}")
+        for i, product in enumerate(cart_data.get('products', []), 1):
+            print(f"[CART ROUTE] Product {i}: {product.get('name', 'Unnamed')} (Type: {product.get('type', 'unknown')})")
             
-        # Load necessary data for calculations
-        try:
-            with open('static/products/blankets/blankets.json') as f:
-                blanket_data = json.load(f)['products']
-            with open('static/products/blankets/bar.json') as f:
-                bar_data = json.load(f)['bars']
-        except Exception as e:
-            print(f"Error loading calculation data: {e}")
-            blanket_data = []
-            bar_data = []
+        # Ensure all products have required fields
+        for product in cart_data.get('products', []):
+            if 'id' not in product:
+                product['id'] = str(uuid.uuid4())
+            if 'added_at' not in product:
+                product['added_at'] = datetime.now().isoformat()
+                
+        # Save any updates
+        save_cart(cart_data)
             
         # Calculate total price - use the pre-calculated total_price which already includes GST
         total_price = 0
         for item in cart_data['products']:
             try:
-                # Debug log the calculations
-                print(f"\nProcessing item: {item.get('name', 'Unknown')}")
-                print(f"Base price: {item.get('calculations', {}).get('basePrice', 0)}")
-                print(f"Barring price: {item.get('calculations', {}).get('bar_price', 0)}")
-                print(f"Price per unit: {item.get('calculations', {}).get('pricePerUnit', 0)}")
-                print(f"Quantity: {item.get('quantity', 0)}")
-                print(f"Discount %: {item.get('calculations', {}).get('discount_percent', 0)}")
-                print(f"Discount amount: {item.get('calculations', {}).get('discount_amount', 0)}")
-                print(f"GST %: {item.get('calculations', {}).get('gst_percent', 0)}")
-                print(f"GST amount: {item.get('calculations', {}).get('gst_amount', 0)}")
-                print(f"Final price: {item.get('calculations', {}).get('final_price', 0)}")
-                
                 # The item's total_price is already calculated with GST in the add_to_cart function
                 item_total = float(item.get('total_price', 0))
                 total_price += item_total
                 
                 # Debug log
-                print(f"Item total: {item_total}")
+                print(f"Item: {item.get('name', 'Unknown')}, Total: {item_total}")
                 
             except (ValueError, TypeError) as e:
                 print(f"Error processing item price: {e}")
                 continue
                 
-        print(f"\nCalculated total price: {total_price}")  # Debug log
-        return render_template('cart.html', 
-            cart=cart_data, 
-            total=round(total_price, 2),
-            blanketData=blanket_data,
-            barData=bar_data
-        )
+        print(f"Calculated total price: {total_price}")  # Debug log
+        return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
         
     except Exception as e:
         import traceback
@@ -161,41 +151,20 @@ from flask import request, jsonify
 
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
+    print("\n=== Add to Cart Request ===")
+    print(f"Request data: {request.data}")
+    
     if not request.is_json:
-        return jsonify({"success": False, "message": "Invalid JSON."}), 400
+        error_msg = "Invalid JSON in request"
+        print(f"Error: {error_msg}")
+        return jsonify({"success": False, "message": error_msg}), 400
     
     try:
         product = request.get_json()
-        cart = load_cart()
+        print(f"Product data received: {json.dumps(product, indent=2)}")
         
-        # Validate required fields for blankets
-        if product.get('type') == 'blanket':
-            required_fields = ['name', 'machine', 'thickness', 'length', 'width', 'quantity', 
-                             'calculations', 'unit_price', 'total_price', 'bar_type', 'bar_price']
-            missing_fields = [field for field in required_fields if field not in product]
-            if missing_fields:
-                return jsonify({
-                    "success": False, 
-                    "message": f"Missing required fields: {', '.join(missing_fields)}"
-                }), 400
-            
-            # Validate calculations
-            calculations = product.get('calculations', {})
-            required_calc_fields = ['areaSqM', 'ratePerSqMt', 'basePrice', 'pricePerUnit', 
-                                 'subtotal', 'discount_percent', 'discount_amount', 
-                                 'discounted_subtotal', 'gst_percent', 'gst_amount', 'final_price']
-            missing_calc_fields = [field for field in required_calc_fields if field not in calculations]
-            if missing_calc_fields:
-                return jsonify({
-                    "success": False, 
-                    "message": f"Missing calculation fields: {', '.join(missing_calc_fields)}"
-                }), 400
-            
-            # Ensure bar data is stored
-            if 'bar_type' not in product:
-                product['bar_type'] = ''
-            if 'bar_price' not in product:
-                product['bar_price'] = 0
+        cart = load_cart()
+        print(f"Current cart before add: {json.dumps(cart, indent=2)}")
         
         # Add timestamp and ensure ID exists
         if 'id' not in product:
@@ -205,17 +174,29 @@ def add_to_cart():
         
         # Check if the cart has space (limit to 100 items)
         if len(cart['products']) >= 100:
-            return jsonify({"success": False, "message": "Cart is full. Maximum 100 items allowed."}), 400
+            error_msg = "Cart is full. Maximum 100 items allowed."
+            print(error_msg)
+            return jsonify({"success": False, "message": error_msg}), 400
         
         # Add the new product
         cart['products'].append(product)
+        print(f"Cart after adding product: {json.dumps(cart, indent=2)}")
+        
+        # Save the cart
         save_cart(cart)
         
-        return jsonify({
+        # Verify the cart was saved
+        saved_cart = load_cart()
+        print(f"Cart after save (verification): {json.dumps(saved_cart, indent=2)}")
+        print(f"Number of products in saved cart: {len(saved_cart.get('products', []))}")
+        
+        response = {
             "success": True, 
             "message": "Product added to cart.",
             "cart_count": len(cart['products'])
-        }), 201
+        }
+        print(f"Sending response: {json.dumps(response, indent=2)}")
+        return jsonify(response), 201
         
     except Exception as e:
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
