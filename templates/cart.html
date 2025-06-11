@@ -141,7 +141,6 @@
                         <i class="fas fa-trash"></i>
                     </button>
                 </form>
-                    </form>
                 </div>
                 {% endfor %}
             </div>
@@ -151,12 +150,6 @@
                     <h4>Total: ₹{{ "%.2f"|format(total) }}</h4>
                     <a href="#" class="btn btn-primary btn-lg">Proceed to Checkout</a>
                 </div>
-            </div>
-        {% else %}
-            <div class="empty-cart">
-                <h3>Your cart is empty</h3>
-                <p>Looks like you haven't added anything to your cart yet.</p>
-                <a href="{{ url_for('home') }}" class="btn btn-primary">Start Shopping</a>
             </div>
         {% endif %}
     </div>
