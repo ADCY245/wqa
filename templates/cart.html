@@ -88,13 +88,10 @@
             <div class="cart-items">
                 {% for item in cart.products %}
                 <div class="cart-item">
-                    <div class="item-details">
-                        <h5>{{ item.name or 'Product' }}</h5>
-                        <p class="mb-1"><strong>Product Type:</strong> {{ item.type|title }}</p>
-                        
+                    <div class="item-details w-100">
                         {% if item.type == 'blanket' %}
                             <!-- Blanket Product -->
-                            <div class="blanket-product w-100"
+                            <div class="blanket-product"
                                  data-area="{{ item.calculations.areaSqM|default(0) }}"
                                  data-rate="{{ item.calculations.ratePerSqMt|default(0) }}"
                                  data-base-price="{{ item.calculations.basePrice|default(0) }}"
@@ -107,7 +104,6 @@
                                     <div>
                                         <h5 class="mb-2">{{ item.name }}</h5>
                                         <p class="mb-1"><strong>Product Type:</strong> Blanket</p>
-                                        <p class="mb-1"><strong>Type:</strong> {{ item.name }}</p>
                                         {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
                                         {% if item.thickness %}<p class="mb-1"><strong>Thickness:</strong> {{ item.thickness }} mm</p>{% endif %}
                                         {% if item.length and item.width %}<p class="mb-2"><strong>Dimensions:</strong> {{ item.length }} x {{ item.width }} mm</p>{% endif %}
@@ -124,10 +120,10 @@
                                         <span>₹<span class="base-price">{{ "%.2f"|format(item.calculations.basePrice|default(0)) }}</span></span>
                                     </div>
                                     
-                                    {% if item.bar_type and item.bar_type|lower != 'none' %}
-                                    <div class="bar-price-row">
+                                    {% if item.bar_price and item.bar_price > 0 %}
+                                    <div class="bar-price-row mt-2">
                                         <div class="d-flex justify-content-between">
-                                            <span>Bar Price ({{ item.bar_type }}):</span>
+                                            <span>{% if item.bar_type and item.bar_type|lower != 'none' %}Bar Price ({{ item.bar_type }}){% else %}Bar Price{% endif %}:</span>
                                             <span>+ ₹<span class="bar-price">{{ "%.2f"|format(item.bar_price|default(0)) }}</span></span>
                                         </div>
                                     </div>
