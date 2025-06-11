@@ -158,9 +158,9 @@
                                     {% set gst_percent = item.calculations.gst_percent|default(18) %}
                                     
                                     {% set subtotal_before_discount = unit_price * quantity %}
-                                    {% set discount_amount = (unit_price * quantity * discount_percent / 100) %}
+                                    {% set discount_amount = (subtotal_before_discount * discount_percent / 100) %}
                                     {% set discount_amount = discount_amount|round(2) %}
-                                    {% set subtotal_after_discount = (unit_price * quantity * (100 - discount_percent) / 100) %}
+                                    {% set subtotal_after_discount = subtotal_before_discount - discount_amount %}
                                     {% set subtotal_after_discount = subtotal_after_discount|round(2) %}
                                     
                                     <!-- Discount Section -->
