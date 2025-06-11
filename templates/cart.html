@@ -120,11 +120,11 @@
                                         <span>₹<span class="base-price">{{ "%.2f"|format(item.calculations.basePrice|default(0)) }}</span></span>
                                     </div>
                                     
-                                    {% if item.bar_price and item.bar_price > 0 %}
+                                    {% if item.calculations.barPrice and item.calculations.barPrice > 0 %}
                                     <div class="bar-price-row mt-2">
                                         <div class="d-flex justify-content-between">
                                             <span>{% if item.bar_type and item.bar_type|lower != 'none' %}Bar Price ({{ item.bar_type }}){% else %}Bar Price{% endif %}:</span>
-                                            <span>+ ₹<span class="bar-price">{{ "%.2f"|format(item.bar_price|default(0)) }}</span></span>
+                                            <span>+ ₹<span class="bar-price">{{ "%.2f"|format(item.calculations.barPrice|default(0)) }}</span></span>
                                         </div>
                                     </div>
                                     {% endif %}
