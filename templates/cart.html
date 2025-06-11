@@ -98,32 +98,23 @@ Has Calculations: {{ 'Yes' if cart.products[0].calculations else 'No' }}</pre>
                             <!-- Get the calculations object or create an empty one -->
                             {% set calc = item.calculations or {} %}
                             
-                            <!-- Calculate area in square meters -->
-                            {% set area_sqm = (item.length|default(0) * item.width|default(0)) / 1000000 %}
-                            
-                            <!-- Get all values with safe defaults -->
-                            {% set rate_per_sqm = item.calculations.ratePerSqMt|default(0) %}
-                            {% set base_price = area_sqm * rate_per_sqm %}
+                            <!-- Get all values from the calculations object -->
+                            {% set area_sqm = calc.areaSqM|default(0) %}
+                            {% set base_price = calc.basePrice|default(0) %}
+                            {% set price_per_unit = calc.pricePerUnit|default(0) %}
+                            {% set discount_percent = calc.discount_percent|default(0) %}
+                            {% set discount_amount = calc.discount_amount|default(0) %}
+                            {% set gst_percent = calc.gst_percent|default(18) %}
+                            {% set gst_amount = calc.gst_amount|default(0) %}
+                            {% set final_total = calc.final_price|default(0) %}
                             
                             <!-- Get barring information -->
                             {% set bar_price = item.bar_price|default(0) %}
                             {% set bar_type = item.bar_type|default('None') %}
                             
-                            <!-- Calculate prices with barring -->
-                            {% set price_with_bar = base_price + bar_price %}
-                            
-                            <!-- Calculate discount -->
-                            {% set discount_percent = calc.discount_percent|default(0) %}
-                            {% set discount_amount = (price_with_bar * discount_percent / 100) %}
-                            {% set price_after_discount = price_with_bar - discount_amount %}
-                            
-                            <!-- Calculate GST -->
-                            {% set gst_percent = calc.gst_percent|default(18) %}
-                            {% set gst_amount = (price_after_discount * gst_percent / 100) %}
-                            
-                            <!-- Calculate final prices -->
-                            {% set final_unit_price = price_after_discount + gst_amount %}
-                            {% set final_total = final_unit_price * item.quantity|default(1) %}
+                            <!-- Calculate derived values -->
+                            {% set price_after_discount = price_per_unit - discount_amount %}
+                            {% set price_with_bar = price_per_unit %}
                             
                             <!-- Debug output -->
                             <!--
@@ -164,68 +155,47 @@ Has Calculations: {{ 'Yes' if cart.products[0].calculations else 'No' }}</pre>
                                 
                                 <!-- Always show barring if it exists -->
                                 {% if item.bar_type and item.bar_type != 'None' %}
-                                    <p class="mb-1">
-                                        <strong>Barring:</strong> {{ item.bar_type }}
-                                        <span class="text-muted">(₹{{ "%.2f"|format(bar_price) }}/unit)</span>
-                                    </p>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Price Breakdown -->
-                            <div class="price-breakdown mt-3">
-                                <!-- Base Price -->
+                                    <div class="price-breakdown">
                                 <div class="d-flex justify-content-between">
-                                    <span>Area: {{ "%.4f"|format(area_sqm) }} m² × ₹{{ "%.2f"|format(rate_per_sqm) }}/m²</span>
+                                    <span>Area:</span>
+                                    <span>{{ "%.4f"|format(area_sqm) }} m² × ₹{{ "%.2f"|format(calc.ratePerSqMt) }}/m²</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>Base Price:</span>
                                     <span>₹{{ "%.2f"|format(base_price) }}</span>
                                 </div>
                                 
-                                <!-- Barring Cost - Only show if barring is selected -->
-                                {% if bar_type and bar_type != 'None' and bar_type != 'No Barring' %}
+                                {% if bar_type and bar_type != 'None' and bar_type != 'No Barring' and bar_price > 0 %}
                                 <div class="d-flex justify-content-between">
-                                    <span>Barring ({{ bar_type }})</span>
-                                    <span>+₹{{ "%.2f"|format(bar_price) }}</span>
+                                    <span>Barring ({{ bar_type }}):</span>
+                                    <span>+ ₹{{ "%.2f"|format(bar_price) }}</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>Price with Barring:</span>
+                                    <span>₹{{ "%.2f"|format(price_per_unit) }}</span>
                                 </div>
                                 {% endif %}
                                 
-                                <!-- Price before discount -->
-                                <div class="d-flex justify-content-between fw-bold">
-                                    <span>Price before discount:</span>
-                                    <span>₹{{ "%.2f"|format(price_with_bar) }}</span>
-                                </div>
-                                
-                                <!-- Quantity -->
-                                <div class="d-flex justify-content-between">
-                                    <span>Quantity:</span>
-                                    <span>× {{ item.quantity }} units</span>
-                                </div>
-                                
-                                <!-- Subtotal -->
-                                <div class="d-flex justify-content-between fw-bold border-top pt-2">
-                                    <span>Subtotal ({{ item.quantity }} units):</span>
-                                    <span>₹{{ "%.2f"|format(price_with_bar * item.quantity) }}</span>
-                                </div>
-                                
-                                <!-- Discount if any -->
                                 {% if discount_percent > 0 %}
                                 <div class="d-flex justify-content-between text-danger">
                                     <span>Discount ({{ discount_percent }}%):</span>
-                                    <span>-₹{{ "%.2f"|format(discount_amount * item.quantity) }}</span>
+                                    <span>- ₹{{ "%.2f"|format(discount_amount) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>After Discount:</span>
-                                    <span>₹{{ "%.2f"|format(price_after_discount * item.quantity) }}</span>
+                                    <span>₹{{ "%.2f"|format(price_after_discount) }}</span>
                                 </div>
                                 {% endif %}
                                 
-                                <!-- GST -->
                                 <div class="d-flex justify-content-between">
                                     <span>GST ({{ gst_percent }}%):</span>
-                                    <span>+₹{{ "%.2f"|format(gst_amount * item.quantity) }}</span>
+                                    <span>+ ₹{{ "%.2f"|format(gst_amount) }}</span>
                                 </div>
                                 
-                                <!-- Final Total -->
                                 <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
-                                    <span>Final Amount:</span>
+                                    <span>Final Amount ({{ item.quantity }} units):</span>
                                     <span>₹{{ "%.2f"|format(final_total) }}</span>
                                 </div>
                             </div>
