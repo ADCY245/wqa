@@ -70,19 +70,22 @@
                     <div class="item-details">
                         <h5>{{ item.name or 'Unknown Product' }}</h5>
                         {% if item.type == 'blanket' %}
-                            {% set calc = item.calculations %}
-                            {% set area_sqm = calc.areaSqM if calc and calc.areaSqM is defined else 0 %}
-                            {% set rate_per_sqm = calc.ratePerSqMt if calc and calc.ratePerSqMt is defined else 0 %}
-                            {% set base_price = calc.basePrice if calc and calc.basePrice is defined else 0 %}
-                            {% set bar_price = item.bar_price if item.bar_price is defined else 0 %}
-                            {% set price_with_bar = calc.pricePerUnit if calc and calc.pricePerUnit is defined else 0 %}
-                            {% set discount_percent = calc.discount_percent if calc and calc.discount_percent is defined else 0 %}
-                            {% set discount_amount = calc.discount_amount if calc and calc.discount_amount is defined else 0 %}
-                            {% set discounted_price = calc.discounted_subtotal / item.quantity if calc and calc.discounted_subtotal is defined and item.quantity > 0 else 0 %}
-                            {% set gst_percent = calc.gst_percent if calc and calc.gst_percent is defined else 12 %}
-                            {% set gst_amount = calc.gst_amount / item.quantity if calc and calc.gst_amount is defined and item.quantity > 0 else 0 %}
-                            {% set final_unit_price = item.unit_price if item.unit_price is defined else 0 %}
-                            {% set final_total = item.total_price if item.total_price is defined else 0 %}
+                            {% set calc = item.calculations or {} %}
+                            {% set area_sqm = calc.areaSqM|default(0) %}
+                            {% set rate_per_sqm = calc.ratePerSqMt|default(0) %}
+                            {% set base_price = calc.basePrice|default(0) %}
+                            {% set bar_price = item.bar_price|default(0) %}
+                            {% set price_with_bar = calc.pricePerUnit|default(0) %}
+                            {% set discount_percent = calc.discount_percent|default(0) %}
+                            {% set discount_amount = calc.discount_amount|default(0) %}
+                            {% set discounted_subtotal = calc.discounted_subtotal|default(price_with_bar * item.quantity) %}
+                            {% set gst_percent = calc.gst_percent|default(12) %}
+                            {% set gst_amount = calc.gst_amount|default(0) %}
+                            {% set final_unit_price = item.unit_price|default(0) %}
+                            {% set final_total = item.total_price|default(0) %}
+                            
+                            {# Debug output (can be removed after testing) #}
+                            <!-- Debug: bar_type={{ item.bar_type|default('None') }}, bar_price={{ bar_price }} -->
                             
                             <div class="product-details mb-3">
                                 <p class="mb-1"><strong>Blanket Type:</strong> {{ item.name }}</p>
@@ -102,7 +105,7 @@
                                     <span>Area: {{ "%.4f"|format(area_sqm) }} m² × ₹{{ "%.2f"|format(rate_per_sqm) }}/m²</span>
                                     <span>₹{{ "%.2f"|format(base_price) }}</span>
                                 </div>
-                                {% if item.bar_type and item.bar_type != 'None' %}
+                                {% if item.bar_type and item.bar_type != 'None' and bar_price > 0 %}
                                 <div class="d-flex justify-content-between">
                                     <span>Barring ({{ item.bar_type }})</span>
                                     <span>+₹{{ "%.2f"|format(bar_price) }}</span>
