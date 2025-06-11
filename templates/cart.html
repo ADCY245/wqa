@@ -90,50 +90,127 @@
                 <div class="cart-item">
                     <div class="item-details">
                         <h5>{{ item.name or 'Product' }}</h5>
-                    
-                    {% if item.type == 'mpack' %}
-                        <!-- MPack Product -->
-                        <p class="mb-1"><strong>Type:</strong> {{ item.name }}</p>
-                        {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
-                        {% if item.size %}<p class="mb-1"><strong>Size:</strong> {{ item.size }}</p>{% endif %}
+                        <p class="mb-1"><strong>Product Type:</strong> {{ item.type|title }}</p>
                         
-                        {% set calc = item.calculations or {} %}
-                        
-                        <div class="price-breakdown">
-                            <div class="d-flex justify-content-between">
-                                <span>Unit Price:</span>
-                                <span>₹{{ "%.2f"|format(calc.unitPrice|default(0)) }}</span>
-                            </div>
+                        {% if item.type == 'blanket' %}
+                            <!-- Blanket Product -->
+                            <p class="mb-1"><strong>Blanket Type:</strong> {{ item.name }}</p>
+                            {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
+                            {% if item.thickness %}<p class="mb-1"><strong>Thickness:</strong> {{ item.thickness }}</p>{% endif %}
+                            {% if item.length and item.width %}<p class="mb-1"><strong>Dimensions:</strong> {{ item.length }} x {{ item.width }} mm</p>{% endif %}
                             
-                            {% if calc.discountPercent > 0 %}
-                            <div class="d-flex justify-content-between text-danger">
-                                <span>Discount ({{ calc.discountPercent }}%):</span>
-                                <span>- ₹{{ "%.2f"|format(calc.discountAmount|default(0)) }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>After Discount:</span>
-                                <span>₹{{ "%.2f"|format(calc.priceAfterDiscount|default(0)) }}</span>
-                            </div>
+                            {% if item.bar_type and item.bar_type|lower != 'none' %}
+                                <p class="mb-1"><strong>Bar Type:</strong> {{ item.bar_type }}</p>
+                                <p class="mb-1"><strong>Bar Price:</strong> ₹<span class="bar-price">{{ "%.2f"|format(item.bar_price|default(0)) }}</span></p>
                             {% endif %}
                             
-                            <div class="d-flex justify-content-between">
-                                <span>GST ({{ calc.gstPercent|default(18) }}%):</span>
-                                <span>+ ₹{{ "%.2f"|format(calc.gstAmount|default(0)) }}</span>
+                            <div class="price-breakdown mt-2 p-2 bg-light rounded" 
+                                 data-area="{{ item.calculations.areaSqM|default(0) }}"
+                                 data-rate="{{ item.calculations.ratePerSqMt|default(0) }}"
+                                 data-base-price="{{ item.calculations.basePrice|default(0) }}"
+                                 data-bar-price="{{ item.bar_price|default(0) }}"
+                                 data-quantity="{{ item.quantity|default(1) }}"
+                                 data-discount-percent="{{ item.calculations.discount_percent|default(0) }}"
+                                 data-gst-percent="{{ item.calculations.gst_percent|default(18) }}">
+                                <div class="d-flex justify-content-between">
+                                    <span>Base Price (<span class="area">0</span> m² × ₹<span class="rate">0.00</span>):</span>
+                                    <span>₹<span class="base-price">0.00</span></span>
+                                </div>
+                                
+                                <div class="barring-row d-none">
+                                    <div class="d-flex justify-content-between">
+                                        <span>+ Barring Price:</span>
+                                        <span>₹<span class="bar-price-display">0.00</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Price per Unit:</span>
+                                        <span>₹<span class="price-per-unit">0.00</span></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>Quantity:</span>
+                                    <span class="quantity">1</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal (<span class="quantity-display">1</span> units):</span>
+                                    <span>₹<span class="subtotal">0.00</span></span>
+                                </div>
+                                
+                                <div class="discount-row d-none">
+                                    <div class="d-flex justify-content-between text-danger">
+                                        <span>Discount (<span class="discount-percent">0</span>%):</span>
+                                        <span>- ₹<span class="discount-amount">0.00</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>After Discount:</span>
+                                        <span>₹<span class="after-discount">0.00</span></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>GST (<span class="gst-percent">18</span>%):</span>
+                                    <span>+ ₹<span class="gst-amount">0.00</span></span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Final Total:</span>
+                                    <span>₹<span class="final-total">0.00</span></span>
+                                </div>
                             </div>
                             
-                            <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
-                                <span>Total ({{ calc.quantity|default(1) }} units):</span>
-                                <span>₹{{ "%.2f"|format(calc.finalTotal|default(0)) }}</span>
+                        {% elif item.type == 'mpack' %}
+                            <!-- MPack Product -->
+                            <p class="mb-1"><strong>Type:</strong> {{ item.name }}</p>
+                            {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
+                            {% if item.size %}<p class="mb-1"><strong>Size:</strong> {{ item.size }}</p>{% endif %}
+                            
+                            <div class="price-breakdown mt-2 p-2 bg-light rounded" 
+                                 data-type="mpack"
+                                 data-unit-price="{{ item.unit_price|default(0) }}"
+                                 data-quantity="{{ item.quantity|default(1) }}"
+                                 data-discount-percent="{{ item.discount_percent|default(0) }}"
+                                 data-gst-percent="{{ item.gst_percent|default(18) }}">
+                                <div class="d-flex justify-content-between">
+                                    <span>Unit Price:</span>
+                                    <span>₹<span class="unit-price">0.00</span></span>
+                                </div>
+                                
+                                <div class="discount-row d-none">
+                                    <div class="d-flex justify-content-between text-danger">
+                                        <span>Discount (<span class="discount-percent">0</span>%):</span>
+                                        <span>- ₹<span class="discount-amount">0.00</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>After Discount:</span>
+                                        <span>₹<span class="after-discount">0.00</span></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>GST (<span class="gst-percent">18</span>%):</span>
+                                    <span>+ ₹<span class="gst-amount">0.00</span></span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <span>Quantity:</span>
+                                    <span class="quantity">1</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                    <span>Total:</span>
+                                    <span>₹<span class="final-total">0.00</span></span>
+                                </div>
                             </div>
-                        </div>
-                        
-                    {% else %}
-                        <!-- Generic Product -->
-                        <p class="mb-1"><strong>Price:</strong> ₹{{ "%.2f"|format(item.unit_price|default(0)) }}</p>
-                        <p class="mb-1"><strong>Quantity:</strong> {{ item.quantity|default(1) }}</p>
-                        <p class="mb-1"><strong>Total:</strong> ₹{{ "%.2f"|format((item.unit_price|default(0)) * (item.quantity|default(1))) }}</p>
-                    {% endif %}
-                </div>
+                            
+                        {% else %}
+                            <!-- Generic Product -->
+                            <p class="mb-1"><strong>Price:</strong> ₹{{ "%.2f"|format(item.unit_price|default(0)) }}</p>
+                            <p class="mb-1"><strong>Quantity:</strong> {{ item.quantity|default(1) }}</p>
+                            <p class="mb-1"><strong>Total:</strong> ₹{{ "%.2f"|format((item.unit_price|default(0)) * (item.quantity|default(1))) }}</p>
+                        {% endif %}
+                    </div>
                 
                 <form action="{{ url_for('remove_from_cart') }}" method="POST">
                     <input type="hidden" name="product_id" value="{{ item.id }}">
