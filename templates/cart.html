@@ -22,8 +22,54 @@
         .cart-item {
             display: flex;
             align-items: flex-start;
-            padding: 20px 0;
-            border-bottom: 1px solid #eee;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .cart-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .cart-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+        
+        .product-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .product-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .price-breakdown {
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 767.98px) {
+            .cart-item {
+                padding: 15px;
+            }
+            
+            .product-image {
+                width: 60px;
+                height: 60px;
+            }
         }
         .item-details {
             flex-grow: 1;
@@ -86,10 +132,21 @@
             </div>
         {% else %}
             <div class="cart-items">
+                <!-- Cart Header -->
+                <div class="row mb-3 fw-bold d-none d-md-flex">
+                    <div class="col-md-5">Product Details</div>
+                    <div class="col-md-2 text-end">Unit Price</div>
+                    <div class="col-md-2 text-center">Quantity</div>
+                    <div class="col-md-2 text-end">Subtotal</div>
+                    <div class="col-md-1"></div>
+                </div>
+                
                 {% for item in cart.products %}
                 <div class="cart-item">
                     <div class="item-details w-100">
-                        {% if item.type == 'blanket' %}
+                        <div class="row">
+                            <div class="col-md-5">
+                                {% if item.type == 'blanket' %}
                             <!-- Blanket Product -->
                             <div class="blanket-product"
                                  data-area="{{ item.calculations.areaSqM|default(0) }}"
@@ -193,12 +250,42 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                             
-                        {% elif item.type == 'mpack' %}
-                            <!-- MPack Product -->
-                            <div class="mpack-product" 
-                                 data-unit-price="{{ item.unit_price|default(0) }}"
-                                 data-quantity="{{ item.quantity|default(1) }}"
+                            <!-- Unit Price -->
+                            <div class="col-md-2 text-md-end mb-2 mb-md-0">
+                                <div class="d-md-none fw-bold">Unit Price:</div>
+                                <div>₹{{ "%.2f"|format(item.calculations.pricePerUnit|default(0)) }}</div>
+                            </div>
+                            
+                            <!-- Quantity -->
+                            <div class="col-md-2 text-center mb-2 mb-md-0">
+                                <div class="d-md-none fw-bold">Qty:</div>
+                                <div>{{ item.quantity|default(1) }}</div>
+                            </div>
+                            
+                            <!-- Subtotal -->
+                            <div class="col-md-2 text-md-end mb-2 mb-md-0">
+                                <div class="d-md-none fw-bold">Subtotal:</div>
+                                <div>₹{{ "%.2f"|format((item.calculations.pricePerUnit|default(0)) * (item.quantity|default(1))) }}</div>
+                            </div>
+                            
+                            <!-- Remove Button -->
+                            <div class="col-md-1 text-end">
+                                <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                            {% elif item.type == 'mpack' %}
+                                <!-- MPack Product -->
+                                <div class="mpack-product" 
+                                     data-unit-price="{{ item.unit_price|default(0) }}"
+                                     data-quantity="{{ item.quantity|default(1) }}"
                                  data-discount-percent="{{ item.discount_percent|default(0) }}"
                                  data-gst-percent="{{ item.gst_percent|default(18) }}">
                                 
@@ -266,7 +353,7 @@
                 </div>
                 {% endfor %}
             </div>
-
+            
             <div class="cart-summary">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4>Total: ₹{{ "%.2f"|format(total) }}</h4>
