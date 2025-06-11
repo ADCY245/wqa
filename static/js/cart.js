@@ -284,21 +284,116 @@ function calculateMPackPrices(container) {
     }
 }
 
+// Calculate Blanket prices
+function calculateBlanketPrices(container) {
+    try {
+        console.log('Calculating Blanket prices for container:', container);
+        
+        // Get data attributes
+        const area = parseFloat(container.dataset.area) || 0;
+        const rate = parseFloat(container.dataset.rate) || 0;
+        const basePrice = parseFloat(container.dataset.basePrice) || 0;
+        const barPrice = parseFloat(container.dataset.barPrice) || 0;
+        const quantity = parseInt(container.dataset.quantity) || 1;
+        const discountPercent = parseFloat(container.dataset.discountPercent) || 0;
+        const gstPercent = parseFloat(container.dataset.gstPercent) || 18;
+        
+        console.log('Raw values:', { area, rate, basePrice, barPrice, quantity, discountPercent, gstPercent });
+        
+        // Calculate prices
+        const subtotal = basePrice * quantity;
+        const discountAmount = subtotal * (discountPercent / 100);
+        const priceAfterDiscount = subtotal - discountAmount;
+        const gstAmount = (priceAfterDiscount * gstPercent) / 100;
+        const finalTotal = priceAfterDiscount + gstAmount + (barPrice * quantity);
+        
+        console.log('Calculated values:', { subtotal, discountAmount, priceAfterDiscount, gstAmount, finalTotal });
+        
+        // Update UI - Base Price
+        const areaEl = container.querySelector('.area');
+        const rateEl = container.querySelector('.rate');
+        const basePriceEl = container.querySelector('.base-price');
+        
+        if (areaEl && rateEl && basePriceEl) {
+            areaEl.textContent = area.toFixed(2);
+            rateEl.textContent = rate.toFixed(2);
+            basePriceEl.textContent = (basePrice * quantity).toFixed(2);
+            console.log('Updated base price row');
+        } else {
+            console.error('One or more base price elements not found');
+        }
+        
+        // Update Bar Price if exists
+        const barPriceEl = container.querySelector('.bar-price');
+        const barPriceRow = container.querySelector('.bar-price-row');
+        
+        if (barPrice > 0 && barPriceEl && barPriceRow) {
+            barPriceRow.classList.remove('d-none');
+            barPriceEl.textContent = (barPrice * quantity).toFixed(2);
+            console.log('Updated bar price row');
+        } else if (barPriceRow) {
+            barPriceRow.classList.add('d-none');
+        }
+        
+        // Update Quantity
+        const quantityEl = container.querySelector('.quantity');
+        if (quantityEl) {
+            quantityEl.textContent = quantity;
+            console.log('Updated quantity to:', quantity);
+        } else {
+            console.error('Quantity element not found');
+        }
+        
+        // Update Subtotal
+        const subtotalEl = container.querySelector('.subtotal');
+        if (subtotalEl) {
+            subtotalEl.textContent = (basePrice * quantity).toFixed(2);
+            console.log('Updated subtotal to:', (basePrice * quantity).toFixed(2));
+        } else {
+            console.error('Subtotal element not found');
+        }
+        
+        // Update GST and total
+        const gstPercentEl = container.querySelector('.gst-percent');
+        const gstAmountEl = container.querySelector('.gst-amount');
+        const finalTotalEl = container.querySelector('.final-total');
+        
+        if (gstPercentEl && gstAmountEl && finalTotalEl) {
+            gstPercentEl.textContent = gstPercent;
+            gstAmountEl.textContent = gstAmount.toFixed(2);
+            finalTotalEl.textContent = finalTotal.toFixed(2);
+            console.log('Updated GST and total');
+        } else {
+            console.error('One or more total calculation elements not found');
+        }
+        
+        console.log('Finished calculating Blanket prices');
+    } catch (error) {
+        console.error('Error in calculateBlanketPrices:', error);
+    }
+}
+
 // Initialize price calculations when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded, initializing price calculations...');
     
-    // Calculate prices for all price breakdowns
-    const priceContainers = document.querySelectorAll('.price-breakdown');
-    console.log(`Found ${priceContainers.length} price containers to calculate`);
+    // Initialize cart count
+    updateCartCount();
     
-    priceContainers.forEach((container, index) => {
-        console.log(`Calculating prices for container ${index + 1}`, container);
-        calculateProductPrices(container);
+    // Calculate prices for all products
+    initializeCartCalculations();
+});
+
+function initializeCartCalculations() {
+    // Handle MPack products
+    document.querySelectorAll('.mpack-product').forEach(container => {
+        console.log('Initializing MPack product:', container);
+        calculateMPackPrices(container);
     });
     
-    // Log if no containers were found
-    if (priceContainers.length === 0) {
-        console.warn('No price containers found on the page');
-    }
-});
+    // Handle Blanket products
+    document.querySelectorAll('.blanket-product').forEach(container => {
+        console.log('Initializing Blanket product:', container);
+        calculateBlanketPrices(container);
+    });
+}
