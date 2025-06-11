@@ -76,7 +76,10 @@ def cart():
         # Debug output
         print(f"[CART ROUTE] Number of products in cart: {len(cart_data.get('products', []))}")
         for i, product in enumerate(cart_data.get('products', []), 1):
-            print(f"[CART ROUTE] Product {i}: {product.get('name', 'Unnamed')} (Type: {product.get('type', 'unknown')})")
+            print(f"[CART ROUTE] Product {i}:")
+            print(f"  Name: {product.get('name', 'Unnamed')}")
+            print(f"  Type: {product.get('type', 'unknown')}")
+            print(f"  Calculations: {product.get('calculations', 'No calculations')}")
             
         # Ensure all products have required fields
         for product in cart_data.get('products', []):
@@ -84,6 +87,21 @@ def cart():
                 product['id'] = str(uuid.uuid4())
             if 'added_at' not in product:
                 product['added_at'] = datetime.now().isoformat()
+                
+            # Ensure calculations exist for MPack products
+            if product.get('type') == 'mpack' and 'calculations' not in product:
+                print(f"[CART ROUTE] Adding missing calculations for MPack product")
+                product['calculations'] = {
+                    'unitPrice': product.get('unit_price', 0),
+                    'quantity': product.get('quantity', 1),
+                    'subtotal': product.get('unit_price', 0) * product.get('quantity', 1),
+                    'discountPercent': product.get('discount_percent', 0),
+                    'discountAmount': product.get('discount_amount', 0),
+                    'priceAfterDiscount': (product.get('unit_price', 0) * product.get('quantity', 1)) - product.get('discount_amount', 0),
+                    'gstPercent': product.get('gst_percent', 12),
+                    'gstAmount': product.get('gst_amount', 0),
+                    'finalTotal': product.get('total_price', 0)
+                }
                 
         # Save any updates
         save_cart(cart_data)
@@ -97,7 +115,7 @@ def cart():
                 total_price += item_total
                 
                 # Debug log
-                print(f"Item: {item.get('name', 'Unknown')}, Total: {item_total}")
+                print(f"Item: {item.get('name', 'Unknown')}, Total: {item_total}, Type: {item.get('type', 'unknown')}")
                 
             except (ValueError, TypeError) as e:
                 print(f"Error processing item price: {e}")
