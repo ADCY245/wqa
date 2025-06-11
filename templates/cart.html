@@ -20,8 +20,7 @@
             margin-bottom: 30px;
         }
         .cart-item {
-            display: flex;
-            align-items: flex-start;
+            display: block;
             padding: 20px;
             margin-bottom: 20px;
             border: 1px solid #eee;
@@ -132,20 +131,11 @@
             </div>
         {% else %}
             <div class="cart-items">
-                <!-- Cart Header -->
-                <div class="row mb-3 fw-bold d-none d-md-flex">
-                    <div class="col-md-5">Product Details</div>
-                    <div class="col-md-2 text-end">Unit Price</div>
-                    <div class="col-md-2 text-center">Quantity</div>
-                    <div class="col-md-2 text-end">Subtotal</div>
-                    <div class="col-md-1"></div>
-                </div>
-                
                 {% for item in cart.products %}
                 <div class="cart-item">
                     <div class="item-details w-100">
                         <div class="row">
-                            <div class="col-md-5">
+                            <div class="col-12">
                                 {% if item.type == 'blanket' %}
                             <!-- Blanket Product -->
                             <div class="blanket-product"
@@ -252,32 +242,36 @@
                                 </div>
                             </div>
                             
-                            <!-- Unit Price -->
-                            <div class="col-md-2 text-md-end mb-2 mb-md-0">
-                                <div class="d-md-none fw-bold">Unit Price:</div>
-                                <div>₹{{ "%.2f"|format(item.calculations.pricePerUnit|default(0)) }}</div>
-                            </div>
-                            
-                            <!-- Quantity -->
-                            <div class="col-md-2 text-center mb-2 mb-md-0">
-                                <div class="d-md-none fw-bold">Qty:</div>
-                                <div>{{ item.quantity|default(1) }}</div>
-                            </div>
-                            
-                            <!-- Subtotal -->
-                            <div class="col-md-2 text-md-end mb-2 mb-md-0">
-                                <div class="d-md-none fw-bold">Subtotal:</div>
-                                <div>₹{{ "%.2f"|format((item.calculations.pricePerUnit|default(0)) * (item.quantity|default(1))) }}</div>
-                            </div>
-                            
-                            <!-- Remove Button -->
-                            <div class="col-md-1 text-end">
-                                <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="product_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                                </form>
+                            <!-- Price and Actions -->
+                            <div class="col-12 mt-3 pt-3 border-top">
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-4">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Unit Price:</span>
+                                            <span class="fw-bold">₹{{ "%.2f"|format(item.calculations.pricePerUnit|default(0)) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Quantity:</span>
+                                            <span class="fw-bold">{{ item.quantity|default(1) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Subtotal:</span>
+                                            <span class="fw-bold">₹{{ "%.2f"|format((item.calculations.pricePerUnit|default(0)) * (item.quantity|default(1))) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-2 text-end">
+                                        <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="product_id" value="{{ item.id }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100" title="Remove item">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
