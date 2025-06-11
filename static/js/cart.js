@@ -114,7 +114,114 @@ function showToast(title, message, type = 'info') {
     }, 5000);
 }
 
-// Initialize cart count when page loads
+// Calculate product prices based on type
+function calculateProductPrices(container) {
+    const type = container.dataset.type;
+    
+    if (type === 'blanket') {
+        calculateBlanketPrices(container);
+    } else if (type === 'mpack') {
+        calculateMPackPrices(container);
+    }
+}
+
+// Calculate blanket prices
+function calculateBlanketPrices(container) {
+    // Get data attributes
+    const area = parseFloat(container.dataset.area) || 0;
+    const rate = parseFloat(container.dataset.rate) || 0;
+    const basePrice = parseFloat(container.dataset.basePrice) || 0;
+    const barPrice = parseFloat(container.dataset.barPrice) || 0;
+    const quantity = parseInt(container.dataset.quantity) || 1;
+    const discountPercent = parseFloat(container.dataset.discountPercent) || 0;
+    const gstPercent = parseFloat(container.dataset.gstPercent) || 18;
+    
+    // Calculate prices
+    const pricePerUnit = basePrice + barPrice;
+    const subtotal = pricePerUnit * quantity;
+    const discountAmount = subtotal * (discountPercent / 100);
+    const discountedSubtotal = subtotal - discountAmount;
+    const gstAmount = (discountedSubtotal * gstPercent) / 100;
+    const finalTotal = discountedSubtotal + gstAmount;
+    
+    // Update UI
+    container.querySelector('.area').textContent = area.toFixed(4);
+    container.querySelector('.rate').textContent = rate.toFixed(2);
+    container.querySelector('.base-price').textContent = basePrice.toFixed(2);
+    container.querySelector('.quantity').textContent = quantity;
+    container.querySelector('.quantity-display').textContent = quantity;
+    
+    // Handle barring price display
+    const barringRow = container.querySelector('.barring-row');
+    if (barPrice > 0) {
+        barringRow.classList.remove('d-none');
+        container.querySelector('.bar-price-display').textContent = barPrice.toFixed(2);
+        container.querySelector('.price-per-unit').textContent = pricePerUnit.toFixed(2);
+    } else {
+        barringRow.classList.add('d-none');
+    }
+    
+    // Handle discount display
+    const discountRow = container.querySelector('.discount-row');
+    if (discountPercent > 0) {
+        discountRow.classList.remove('d-none');
+        container.querySelector('.discount-percent').textContent = discountPercent;
+        container.querySelector('.discount-amount').textContent = discountAmount.toFixed(2);
+        container.querySelector('.after-discount').textContent = discountedSubtotal.toFixed(2);
+    } else {
+        discountRow.classList.add('d-none');
+    }
+    
+    // Update remaining fields
+    container.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+    container.querySelector('.gst-percent').textContent = gstPercent;
+    container.querySelector('.gst-amount').textContent = gstAmount.toFixed(2);
+    container.querySelector('.final-total').textContent = finalTotal.toFixed(2);
+}
+
+// Calculate MPack prices
+function calculateMPackPrices(container) {
+    // Get data attributes
+    const unitPrice = parseFloat(container.dataset.unitPrice) || 0;
+    const quantity = parseInt(container.dataset.quantity) || 1;
+    const discountPercent = parseFloat(container.dataset.discountPercent) || 0;
+    const gstPercent = parseFloat(container.dataset.gstPercent) || 18;
+    
+    // Calculate prices
+    const subtotal = unitPrice * quantity;
+    const discountAmount = subtotal * (discountPercent / 100);
+    const priceAfterDiscount = subtotal - discountAmount;
+    const gstAmount = (priceAfterDiscount * gstPercent) / 100;
+    const finalTotal = priceAfterDiscount + gstAmount;
+    
+    // Update UI
+    container.querySelector('.unit-price').textContent = unitPrice.toFixed(2);
+    container.querySelector('.quantity').textContent = quantity;
+    
+    // Handle discount display
+    const discountRow = container.querySelector('.discount-row');
+    if (discountPercent > 0) {
+        discountRow.classList.remove('d-none');
+        container.querySelector('.discount-percent').textContent = discountPercent;
+        container.querySelector('.discount-amount').textContent = discountAmount.toFixed(2);
+        container.querySelector('.after-discount').textContent = priceAfterDiscount.toFixed(2);
+    } else {
+        discountRow.classList.add('d-none');
+    }
+    
+    // Update GST and total
+    container.querySelector('.gst-percent').textContent = gstPercent;
+    container.querySelector('.gst-amount').textContent = gstAmount.toFixed(2);
+    container.querySelector('.final-total').textContent = finalTotal.toFixed(2);
+}
+
+// Initialize cart and calculations when page loads
 document.addEventListener('DOMContentLoaded', function() {
     updateCartCount();
+    
+    // Initialize price calculations for all products
+    document.querySelectorAll('.price-breakdown').forEach(container => {
+        calculateProductPrices(container);
+    });
 });
+
