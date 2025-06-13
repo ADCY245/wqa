@@ -108,7 +108,7 @@
             }
             
             // Function to update cart link with company info
-            function updateCartLink(company) {
+            function updateCartLink(company, navigateToCart = false) {
                 try {
                     const cartLink = document.getElementById('cartLink');
                     if (!cartLink) return false;
@@ -140,8 +140,8 @@
                     cartLink.href = newHref;
                     console.log('Updated cart link to:', newHref);
                     
-                    // If this was called from a click, navigate to the cart
-                    if (window.event) {
+                    // Only navigate to cart if explicitly requested
+                    if (navigateToCart && window.event) {
                         window.event.preventDefault();
                         window.location.href = newHref;
                         return false;
@@ -208,7 +208,7 @@
     <div class="container">
         <!-- Cart icon aligned right -->
         <div style="text-align: right; margin-top: 10px; margin-bottom: 10px; position: relative;">
-            <a href="#" id="cartLink" style="position: relative; display: inline-block;" onclick="event.preventDefault(); updateCartLink();">
+            <a href="#" id="cartLink" style="position: relative; display: inline-block;" onclick="event.preventDefault(); updateCartLink(null, true);">
                 <img src="{{ url_for('static', filename='images/cart-icon.png') }}" alt="Cart" style="width: 40px; height: 40px;" />
                 <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
             </a>
