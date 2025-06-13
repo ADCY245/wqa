@@ -37,38 +37,13 @@
         document.addEventListener('DOMContentLoaded', async function() {
             const select = $('#companySelect');
             const productTypeSelect = document.getElementById('productTypeSelect');
-            
-            // Initialize Select2
-            select.select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Type to search for a company',
-                allowClear: true,
-                width: '100%',
-                dropdownAutoWidth: true,
-                minimumInputLength: 1,
-                language: {
-                    noResults: function() {
-                        return 'No companies found';
-                    },
-                    searching: function() {
-                        return 'Searching...';
-                    },
-                    inputTooShort: function(args) {
-                        return 'Please enter ' + args.minimum + ' or more characters';
-                    }
-                },
-                templateResult: formatCompany,
-                templateSelection: formatCompanySelection
-            });
+            let companiesData = [];
             
             // Disable product type selection until company is selected
             productTypeSelect.disabled = true;
             
-            // Load companies data
-            let companiesData = [];
-            
             try {
-                // Try to load companies from the server
+                // Load companies from the server
                 const response = await fetch("{{ url_for('static', filename='data/company_emails.json') }}");
                 
                 if (!response.ok) {
@@ -84,51 +59,43 @@
                 // Sort companies alphabetically by name
                 companiesData.sort((a, b) => (a['Company Name'] || '').localeCompare(b['Company Name'] || ''));
                 
-                // Store the data in a data attribute for Select2's AJAX-like functionality
+                // Store companies data for later use
                 select.data('companies', companiesData);
                 
+                // Initialize Select2 with the companies data
+                select.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Type to search for a company',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownAutoWidth: true,
+                    minimumInputLength: 1,
+                    data: companiesData.map(company => ({
+                        id: company['Company Name'],
+                        text: company['Company Name'],
+                        email: company['EmailID']
+                    })),
+                    language: {
+                        noResults: function() {
+                            return 'No companies found';
+                        },
+                        searching: function() {
+                            return 'Searching...';
+                        },
+                        inputTooShort: function(args) {
+                            return 'Please enter ' + args.minimum + ' or more characters';
+                        }
+                    },
+                    templateResult: function(result) {
+                        if (!result.id) return result.text;
+                        return $('<span>').text(result.text);
+                    },
+                    templateSelection: function(selected) {
+                        return selected.text || 'Select a company';
+                    }
+                });
+                
                 console.log(`Successfully loaded ${companiesData.length} companies`);
-                
-                // Set up the search functionality
-                select.on('select2:open', function() {
-                    // Focus the search field when dropdown is opened
-                    document.querySelector('.select2-search__field').focus();
-                });
-                
-                // Handle AJAX-like search
-                select.on('select2:opening', function() {
-                    // Clear any previous results
-                    $('.select2-results__options').empty();
-                });
-                
-                // Handle search query
-                $(document).on('input', '.select2-search__field', function(e) {
-                    const query = $(this).val().toLowerCase();
-                    const $results = $('.select2-results__options');
-                    $results.empty();
-                    
-                    if (query.length < 1) {
-                        return;
-                    }
-                    
-                    const matchedCompanies = companiesData.filter(company => 
-                        company['Company Name'] && 
-                        company['Company Name'].toLowerCase().includes(query)
-                    );
-                    
-                    if (matchedCompanies.length === 0) {
-                        $results.append('<li class="select2-results__option">No companies found</li>');
-                    } else {
-                        matchedCompanies.slice(0, 50).forEach(company => { // Limit to 50 results for performance
-                            const $option = $(`<li class="select2-results__option">${company['Company Name']}</li>`);
-                            $option.on('mousedown', function() {
-                                select.val(company['Company Name']).trigger('change');
-                                select.trigger('select2:close');
-                            });
-                            $results.append($option);
-                        });
-                    }
-                });
                 
             } catch (error) {
                 console.error('Error loading companies:', error);
@@ -137,26 +104,16 @@
                 select.trigger('change');
             }
             
-            // Format how the selected option is displayed
-            function formatCompany(company) {
-                if (!company.id) { return company.text; }
-                return company.text;
-            }
-            
-            function formatCompanySelection(company) {
-                return company.text || company['Company Name'] || 'Select a company';
-            }
-            
-            // Enable/disable product type based on company selection
+            // Handle company selection
             select.on('change', function() {
                 const selectedValue = $(this).val();
                 productTypeSelect.disabled = !selectedValue;
                 
-                // Store the selected company in localStorage
                 if (selectedValue) {
+                    // Store the selected company in localStorage
                     localStorage.setItem('selectedCompany', selectedValue);
                     
-                    // Find the selected company's email and store it
+                    // Find the selected company's data
                     const selectedCompany = companiesData.find(c => c['Company Name'] === selectedValue);
                     if (selectedCompany && selectedCompany['EmailID']) {
                         localStorage.setItem('selectedCompanyEmail', selectedCompany['EmailID']);
