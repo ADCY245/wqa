@@ -110,17 +110,21 @@
             // Function to update cart link with company info
             function updateCartLink(company) {
                 try {
-                    if (company && (company.name || company.email)) {
-                        const cartLink = document.getElementById('cartLink');
-                        if (cartLink) {
-                            const baseUrl = cartLink.getAttribute('href').split('?')[0];
-                            const params = new URLSearchParams();
-                            if (company.name) params.append('company', company.name);
-                            if (company.email) params.append('email', company.email);
-                            cartLink.href = `${baseUrl}?${params.toString()}`;
-                            console.log('Updated cart link to:', cartLink.href);
-                        }
-                    }
+                    const cartLink = document.getElementById('cartLink');
+                    if (!cartLink) return;
+                    
+                    const baseUrl = cartLink.getAttribute('href').split('?')[0];
+                    const params = new URLSearchParams();
+                    
+                    // Always include company name and email, even if empty
+                    params.append('company', company?.name || '');
+                    params.append('email', company?.email || '');
+                    
+                    // Update the cart link
+                    const newHref = `${baseUrl}?${params.toString()}`;
+                    cartLink.href = newHref;
+                    console.log('Updated cart link to:', newHref);
+                    
                 } catch (e) {
                     console.error('Error updating cart link:', e);
                 }
@@ -208,4 +212,3 @@
     </div>
 </body>
 </html>
-
