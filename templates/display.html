@@ -13,6 +13,64 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
     <script src="{{ url_for('static', filename='js/selection.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const select = document.getElementById('companySelect');
+            const productTypeSelect = document.getElementById('productTypeSelect');
+            
+            // Disable product type selection until company is selected
+            productTypeSelect.disabled = true;
+            
+            try {
+                // Try to load companies from the server
+                const response = await fetch("{{ url_for('static', filename='data/company_emails.json') }}");
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const companies = await response.json();
+                
+                if (!Array.isArray(companies) || companies.length === 0) {
+                    throw new Error('No companies data found');
+                }
+                
+                // Sort companies alphabetically by name
+                companies.sort((a, b) => (a['Company Name'] || '').localeCompare(b['Company Name'] || ''));
+                
+                // Clear any existing options except the first one
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+                
+                // Add companies to the dropdown
+                companies.forEach(company => {
+                    if (company['Company Name']) { // Only add if company name exists
+                        const option = new Option(
+                            company['Company Name'].trim(),
+                            company['Company Name'].trim()
+                        );
+                        option.dataset.email = company['EmailID'] || '';
+                        select.add(option);
+                    }
+                });
+                
+                console.log(`Successfully loaded ${companies.length} companies`);
+            } catch (error) {
+                console.error('Error loading companies:', error);
+                // Add error message to the dropdown
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Error loading companies. Please refresh the page.';
+                select.appendChild(option);
+            }
+            
+            // Enable/disable product type based on company selection
+            select.addEventListener('change', function() {
+                productTypeSelect.disabled = !this.value;
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -24,10 +82,19 @@
             </a>
         </div>
 
-        <h1 class="mb-4">Select Product Type</h1>
-
+        <h1 class="mb-4">Select Company</h1>
+        
         <div class="mb-3">
-            <select id="productTypeSelect" class="form-select" onchange="if(this.value) window.location.href=this.value;">
+            <select id="companySelect" class="form-select mb-4" onchange="localStorage.setItem('selectedCompany', this.value);">
+                <option value="">-- Select Company --</option>
+                <!-- Companies will be loaded here by JavaScript -->
+            </select>
+        </div>
+
+        <h2 class="mb-4">Select Product Type</h2>
+        
+        <div class="mb-3">
+            <select id="productTypeSelect" class="form-select" onchange="if(this.value) { localStorage.setItem('selectedCompany', document.getElementById('companySelect').value); window.location.href=this.value; }" disabled>
                 <option value="">-- Select Type --</option>
                 <option value="{{ url_for('blankets') }}">Blanket</option>
                 <option value="{{ url_for('mpack') }}">Underpacking</option>
