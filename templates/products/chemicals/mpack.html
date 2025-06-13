@@ -130,6 +130,11 @@
     function initSizeSelect2() {
       const sizeSelect = $('#sizeSelect');
       
+      // Destroy any existing Select2 instance
+      if (sizeSelect.hasClass('select2-hidden-accessible')) {
+        sizeSelect.select2('destroy');
+      }
+      
       // Get all available size options
       const sizeOptions = [];
       sizeSelect.find('option').each(function() {
@@ -141,13 +146,15 @@
         }
       });
       
-      // Store the original options for later use
-      sizeSelect.data('sizes', sizeOptions);
-      
-      // Clear the select (keeping the first empty option)
+      // Clear the select and add the default option
       sizeSelect.empty().append('<option value="">-- Type to search size --</option>');
       
-      // Initialize Select2 with the size options
+      // Re-add all size options to the select
+      sizeOptions.forEach(function(option) {
+        sizeSelect.append(new Option(option.text, option.id, false, false));
+      });
+      
+      // Initialize Select2
       sizeSelect.select2({
         theme: 'bootstrap-5',
         placeholder: 'Type to search for a size',
@@ -155,7 +162,6 @@
         width: '100%',
         dropdownAutoWidth: true,
         minimumInputLength: 1,
-        data: sizeOptions,
         language: {
           noResults: function() {
             return 'No matching sizes found';
@@ -166,13 +172,6 @@
           inputTooShort: function(args) {
             return 'Please enter ' + args.minimum + ' or more characters';
           }
-        },
-        templateResult: function(result) {
-          if (!result.id) return result.text;
-          return $('<span>').text(result.text);
-        },
-        templateSelection: function(selected) {
-          return selected.text || 'Select a size';
         }
       });
       
