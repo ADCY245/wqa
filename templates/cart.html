@@ -383,7 +383,7 @@
                 if (email && email !== 'undefined' && email !== 'email@example.com') {
                     const emailElement = document.getElementById('companyEmail');
                     if (emailElement) {
-                        emailElement.textContent = `@${email}`;
+                        emailElement.textContent = `${email}`;
                         emailElement.href = `mailto:${email}`;
                         emailElement.style.cursor = 'pointer';
                         emailElement.title = 'Click to email';
