@@ -57,6 +57,10 @@ def cart():
     try:
         print("\n=== [CART ROUTE] Loading cart data ===")
         
+        # Get company info from URL parameters
+        company_name = request.args.get('company', 'Your Company')
+        company_email = request.args.get('email', 'email@example.com')
+        
         # Load cart data
         cart_data = load_cart()
         print(f"[CART ROUTE] Raw cart data from file: {cart_data}")
@@ -139,7 +143,11 @@ def cart():
                 continue
                 
         print(f"Calculated total price: {total_price}")  # Debug log
-        return render_template('cart.html', cart=cart_data, total=round(total_price, 2))
+        return render_template('cart.html', 
+                            cart=cart_data, 
+                            total=round(total_price, 2),
+                            company_name=company_name,
+                            company_email=company_email)
         
     except Exception as e:
         import traceback
@@ -147,7 +155,11 @@ def cart():
         print("Full traceback:")
         print(traceback.format_exc())
         # Return empty cart in case of error
-        return render_template('cart.html', cart={"products": []}, total=0), 500
+        return render_template('cart.html', 
+                            cart={"products": []}, 
+                            total=0,
+                            company_name='Your Company',
+                            company_email='email@example.com'), 500
 
 # ---------- STATIC FILE SERVING ---------- #
 
