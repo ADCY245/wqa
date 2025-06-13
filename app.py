@@ -57,9 +57,22 @@ def cart():
     try:
         print("\n=== [CART ROUTE] Loading cart data ===")
         
-        # Get company info from URL parameters
-        company_name = request.args.get('company', 'Your Company')
-        company_email = request.args.get('email', 'email@example.com')
+        # Get company info from URL parameters with empty defaults
+        company_name = request.args.get('company', '')
+        company_email = request.args.get('email', '')
+        
+        # If no company in URL, try to get from session
+        if not company_name:
+            company_name = session.get('company_name', 'Your Company')
+        else:
+            session['company_name'] = company_name
+            
+        if not company_email:
+            company_email = session.get('company_email', '')
+        else:
+            session['company_email'] = company_email
+            
+        print(f"[CART ROUTE] Company: {company_name}, Email: {company_email}")
         
         # Load cart data
         cart_data = load_cart()
