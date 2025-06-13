@@ -70,11 +70,15 @@
     </select>
   </div>
 
-  <!-- Size -->
+  <!-- Size with Search -->
   <div class="mb-3" id="sizeSection" style="display:none;">
-    <label for="sizeInput" class="form-label">Enter Size (e.g., 260x350):</label>
-    <input type="text" id="sizeInput" class="form-control" placeholder="Type size (e.g., 260x350)">
+    <label for="sizeInput" class="form-label">Search Size:</label>
+    <input type="text" id="sizeInput" class="form-control" placeholder="Type to search sizes (e.g., 260x350)">
     <div id="sizeSuggestions" class="list-group mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+    <!-- Hidden select for compatibility -->
+    <select id="sizeSelect" style="display: none;">
+      <option value="">-- Select Size --</option>
+    </select>
   </div>
 
   <!-- Price Display -->
@@ -125,73 +129,65 @@
   <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
   
   <script>
-    // Function to handle size input and suggestions
-    function initSizeInput() {
+    // Function to handle size search and selection
+    function initSizeSearch() {
       const sizeInput = document.getElementById('sizeInput');
+      const sizeSelect = document.getElementById('sizeSelect');
       const sizeSuggestions = document.getElementById('sizeSuggestions');
-      let availableSizes = [];
       
-      // Function to load available sizes
-      function loadAvailableSizes() {
-        const sizeSelect = document.createElement('select');
-        sizeSelect.id = 'tempSizeSelect';
-        document.body.appendChild(sizeSelect);
-        
-        // This will be populated by the loadSizes function
-        return [];
+      // Function to update the hidden select and trigger change
+      function selectSize(value, text) {
+        if (sizeSelect) {
+          // Update the hidden select
+          sizeSelect.value = value;
+          // Trigger change event
+          const event = new Event('change');
+          sizeSelect.dispatchEvent(event);
+          // Update the input field
+          sizeInput.value = text;
+          // Hide suggestions
+          sizeSuggestions.style.display = 'none';
+        }
       }
       
-      // Initialize available sizes
-      availableSizes = loadAvailableSizes();
-      
-      // Function to show suggestions
-      function showSuggestions(input) {
-        if (!input) {
+      // Handle input changes
+      sizeInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const options = Array.from(sizeSelect.options);
+        
+        // Clear previous suggestions
+        sizeSuggestions.innerHTML = '';
+        
+        if (!searchTerm) {
           sizeSuggestions.style.display = 'none';
           return;
         }
         
-        // Get all size options from the hidden select
-        const sizeSelect = document.getElementById('sizeSelect');
-        const options = Array.from(sizeSelect.options).map(opt => ({
-          value: opt.value,
-          text: opt.text
-        }));
-        
-        // Filter options that match the input
-        const searchTerm = input.toLowerCase();
+        // Filter matching options
         const matches = options.filter(opt => 
-          opt.text.toLowerCase().includes(searchTerm) ||
-          opt.text.replace(/[^0-9x]/g, '').includes(searchTerm)
+          opt.value && 
+          (opt.text.toLowerCase().includes(searchTerm) || 
+           opt.text.replace(/[^0-9x]/g, '').includes(searchTerm))
         );
         
-        // Display suggestions
+        // Show suggestions
         if (matches.length > 0) {
-          sizeSuggestions.innerHTML = '';
-          matches.forEach(match => {
+          matches.forEach(option => {
             const suggestion = document.createElement('button');
             suggestion.type = 'button';
             suggestion.className = 'list-group-item list-group-item-action';
-            suggestion.textContent = match.text;
-            suggestion.onclick = function() {
-              sizeInput.value = match.text;
-              sizeSuggestions.style.display = 'none';
-              // Trigger change event on the original select
-              sizeSelect.value = match.value;
-              const event = new Event('change');
-              sizeSelect.dispatchEvent(event);
-            };
+            suggestion.textContent = option.text;
+            suggestion.onclick = () => selectSize(option.value, option.text);
             sizeSuggestions.appendChild(suggestion);
           });
           sizeSuggestions.style.display = 'block';
         } else {
-          sizeSuggestions.style.display = 'none';
+          const noResults = document.createElement('div');
+          noResults.className = 'list-group-item';
+          noResults.textContent = 'No matching sizes found';
+          sizeSuggestions.appendChild(noResults);
+          sizeSuggestions.style.display = 'block';
         }
-      }
-      
-      // Event listeners
-      sizeInput.addEventListener('input', function() {
-        showSuggestions(this.value);
       });
       
       // Hide suggestions when clicking outside
@@ -201,25 +197,33 @@
         }
       });
       
-      // Keep the hidden select for compatibility
-      const sizeSelect = document.getElementById('sizeSelect');
-      if (!sizeSelect) {
-        const select = document.createElement('select');
-        select.id = 'sizeSelect';
-        select.style.display = 'none';
-        document.body.appendChild(select);
-      }
+      // Handle Enter key to select the first suggestion
+      sizeInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const firstSuggestion = sizeSuggestions.querySelector('button');
+          if (firstSuggestion) {
+            firstSuggestion.click();
+          }
+        }
+      });
     }
     
-    // Override the loadSizes function to initialize Select2 after loading sizes
+    // Override the loadSizes function to initialize search after loading sizes
     const originalLoadSizes = window.loadSizes;
     window.loadSizes = function() {
       return originalLoadSizes.apply(this, arguments).then(() => {
-        // Initialize Select2 after sizes are loaded
-        initSizeSelect2();
+        // Initialize size search after sizes are loaded
+        initSizeSearch();
       }).catch(error => {
         console.error('Error in loadSizes:', error);
-        throw error; // Re-throw to maintain error handling
+        // Show error to user
+        const sizeInput = document.getElementById('sizeInput');
+        if (sizeInput) {
+          sizeInput.placeholder = 'Error loading sizes. Please try again.';
+          sizeInput.disabled = true;
+        }
+        throw error;
       });
     };
     
@@ -230,4 +234,3 @@
   </script>
 </body>
 </html>
-
