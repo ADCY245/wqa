@@ -109,34 +109,55 @@
             
             // Function to update cart link with company info
             function updateCartLink(company) {
-                if (company && company.name && company.email) {
-                    const cartLink = document.getElementById('cartLink');
-                    const baseUrl = cartLink.getAttribute('href').split('?')[0];
-                    cartLink.href = `${baseUrl}?company=${encodeURIComponent(company.name)}&email=${encodeURIComponent(company.email)}`;
+                try {
+                    if (company && (company.name || company.email)) {
+                        const cartLink = document.getElementById('cartLink');
+                        if (cartLink) {
+                            const baseUrl = cartLink.getAttribute('href').split('?')[0];
+                            const params = new URLSearchParams();
+                            if (company.name) params.append('company', company.name);
+                            if (company.email) params.append('email', company.email);
+                            cartLink.href = `${baseUrl}?${params.toString()}`;
+                            console.log('Updated cart link to:', cartLink.href);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error updating cart link:', e);
                 }
             }
             
             // When a company is selected, enable the product type dropdown
             select.on('select2:select', function(e) {
-                productTypeSelect.disabled = false;
-                
-                // Store the selected company in localStorage
-                const selectedCompany = {
-                    name: e.params.data.text,
-                    email: e.params.data.email
-                };
-                localStorage.setItem('selectedCompany', JSON.stringify(selectedCompany));
-                
-                // Update the product type links to include company info
-                const companyParam = `?company=${encodeURIComponent(selectedCompany.name)}&email=${encodeURIComponent(selectedCompany.email)}`;
-                document.querySelectorAll('#productTypeSelect option').forEach(option => {
-                    if (option.value) {
-                        option.value = option.value.split('?')[0] + companyParam;
+                try {
+                    productTypeSelect.disabled = false;
+                    
+                    // Store the selected company in localStorage
+                    const selectedCompany = {
+                        name: e.params.data.text || '',
+                        email: e.params.data.email || ''
+                    };
+                    console.log('Company selected:', selectedCompany);
+                    
+                    localStorage.setItem('selectedCompany', JSON.stringify(selectedCompany));
+                    
+                    // Update cart link
+                    updateCartLink(selectedCompany);
+                    
+                    // Also update the product type links
+                    if (selectedCompany.name || selectedCompany.email) {
+                        const companyParam = new URLSearchParams();
+                        if (selectedCompany.name) companyParam.append('company', selectedCompany.name);
+                        if (selectedCompany.email) companyParam.append('email', selectedCompany.email);
+                        
+                        document.querySelectorAll('#productTypeSelect option').forEach(option => {
+                            if (option.value) {
+                                option.value = `${option.value.split('?')[0]}?${companyParam.toString()}`;
+                            }
+                        });
                     }
-                });
-                
-                // Update cart link
-                updateCartLink(selectedCompany);
+                } catch (error) {
+                    console.error('Error handling company selection:', error);
+                }
             });
             
             // Restore cart link and selected company from localStorage on page load
