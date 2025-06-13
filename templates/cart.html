@@ -271,11 +271,22 @@
                                     
                                     <div class="price-details mt-3 p-3 bg-light rounded">
                                         <div class="price-grid">
-                                            <!-- Unit Price -->
-                                            <div class="price-row">
-                                                <span class="price-label">Unit Price:</span>
-                                                <span class="price-value">₹{{ "%.2f"|format(item.unit_price|default(0)) }}</span>
-                                            </div>
+                                        <!-- Remove Button -->
+                                        <div class="text-end mb-3">
+                                            <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="product_id" value="{{ item.id }}">
+                                                <input type="hidden" name="product_type" value="mpack">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
+                                                    <i class="fas fa-trash"></i> Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                        
+                                        <!-- Unit Price -->
+                                        <div class="price-row">
+                                            <span class="price-label">Unit Price:</span>
+                                            <span class="price-value">₹{{ "%.2f"|format(item.unit_price|default(0)) }}</span>
+                                        </div>
                                             
                                             <!-- Quantity -->
                                             <div class="price-row">
