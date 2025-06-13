@@ -58,26 +58,23 @@
   <!-- Thickness -->
   <div class="mb-3" id="thicknessSection" style="display:none;">
     <label for="thicknessSelect" class="form-label">Select Thickness (micron):</label>
-    <select id="thicknessSelect" class="form-select" style="width: 100%;">
-      <option value="">-- Type to search or select thickness --</option>
+    <select id="thicknessSelect" class="form-select">
+      <option value="">-- Select Thickness --</option>
       <option value="100">100</option>
       <option value="125">125</option>
       <option value="150">150</option>
       <option value="200">200</option>
       <option value="250">250</option>
       <option value="300">300</option>
-      <option value="350">350</option>
       <option value="400">400</option>
-      <option value="450">450</option>
-      <option value="500">500</option>
     </select>
   </div>
 
   <!-- Size -->
   <div class="mb-3" id="sizeSection" style="display:none;">
     <label for="sizeSelect" class="form-label">Select Size:</label>
-    <select id="sizeSelect" class="form-select">
-      <option value="">-- Select Size --</option>
+    <select id="sizeSelect" class="form-select" style="width: 100%;">
+      <option value="">-- Type to search or select size --</option>
     </select>
   </div>
 
@@ -129,52 +126,60 @@
   <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
   
   <script>
-    // Initialize Select2 for thickness dropdown
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize thickness dropdown with Select2
-      const initThicknessSelect = function() {
-        $('#thicknessSelect').select2({
-          theme: 'bootstrap-5',
-          placeholder: 'Type to search thickness',
-          allowClear: true,
-          width: '100%',
-          dropdownAutoWidth: true,
-          minimumInputLength: 0,
-          language: {
-            noResults: function() {
-              return 'No matching thickness found';
-            },
-            inputTooShort: function() {
-              return 'Type to search thickness';
-            }
-          }
-        });
-      };
+    // Function to initialize Select2 for sizes dropdown
+    function initSizeSelect2() {
+      const sizeSelect = $('#sizeSelect');
       
-      // Initialize immediately if the section is visible
-      if ($('#thicknessSection').is(':visible')) {
-        initThicknessSelect();
+      // Check if Select2 is already initialized on this element
+      if (sizeSelect.hasClass('select2-hidden-accessible')) {
+        sizeSelect.select2('destroy');
       }
       
-      // Reinitialize when the section becomes visible
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.attributeName === 'style' && $(mutation.target).is(':visible')) {
-            // Small delay to ensure the element is fully visible
-            setTimeout(initThicknessSelect, 100);
+      sizeSelect.select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Type to search size',
+        allowClear: true,
+        width: '100%',
+        dropdownAutoWidth: true,
+        minimumInputLength: 0,
+        language: {
+          noResults: function() {
+            return 'No matching size found';
+          },
+          inputTooShort: function() {
+            return 'Type to search size';
+          },
+          searching: function() {
+            return 'Searching...';
           }
-        });
+        }
       });
       
-      // Start observing the thickness section
-      const thicknessSection = document.getElementById('thicknessSection');
-      if (thicknessSection) {
-        observer.observe(thicknessSection, { attributes: true });
-      }
-      
-      // Update cart count when page loads
+      // Ensure the change event still works with Select2
+      sizeSelect.on('change', function() {
+        // Trigger the original change event
+        const event = new Event('change');
+        this.dispatchEvent(event);
+      });
+    }
+    
+    // Override the loadSizes function to initialize Select2 after loading sizes
+    const originalLoadSizes = window.loadSizes;
+    window.loadSizes = function() {
+      return originalLoadSizes.apply(this, arguments).then(() => {
+        // Initialize Select2 after sizes are loaded
+        initSizeSelect2();
+      }).catch(error => {
+        console.error('Error in loadSizes:', error);
+        throw error; // Re-throw to maintain error handling
+      });
+    };
+    
+    // Update cart count when page loads
+    document.addEventListener('DOMContentLoaded', function() {
       updateCartCount();
     });
   </script>
 </body>
 </html>
+
