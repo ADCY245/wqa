@@ -132,58 +132,47 @@
     // Initialize Select2 for thickness dropdown
     document.addEventListener('DOMContentLoaded', function() {
       // Initialize thickness dropdown with Select2
-      $('#thicknessSelect').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Type to search thickness',
-        allowClear: true,
-        width: '100%',
-        dropdownAutoWidth: true,
-        minimumInputLength: 0,
-        language: {
-          noResults: function() {
-            return 'No matching thickness found';
-          },
-          inputTooShort: function(args) {
-            return 'Type to search thickness';
+      const initThicknessSelect = function() {
+        $('#thicknessSelect').select2({
+          theme: 'bootstrap-5',
+          placeholder: 'Type to search thickness',
+          allowClear: true,
+          width: '100%',
+          dropdownAutoWidth: true,
+          minimumInputLength: 0,
+          language: {
+            noResults: function() {
+              return 'No matching thickness found';
+            },
+            inputTooShort: function() {
+              return 'Type to search thickness';
+            }
           }
-        }
-      });
+        });
+      };
       
-      // Make sure the dropdown is properly initialized when the section becomes visible
+      // Initialize immediately if the section is visible
+      if ($('#thicknessSection').is(':visible')) {
+        initThicknessSelect();
+      }
+      
+      // Reinitialize when the section becomes visible
       const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-          if (mutation.attributeName === 'style') {
-            const isVisible = $(mutation.target).css('display') !== 'none';
-            if (isVisible) {
-              // Reinitialize Select2 when section becomes visible
-              $('#thicknessSelect').select2('destroy').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Type to search thickness',
-                allowClear: true,
-                width: '100%',
-                dropdownAutoWidth: true,
-                minimumInputLength: 0,
-                language: {
-                  noResults: function() {
-                    return 'No matching thickness found';
-                  },
-                  inputTooShort: function(args) {
-                    return 'Type to search thickness';
-                  }
-                }
-              });
-            }
+          if (mutation.attributeName === 'style' && $(mutation.target).is(':visible')) {
+            // Small delay to ensure the element is fully visible
+            setTimeout(initThicknessSelect, 100);
           }
         });
       });
       
-      // Start observing the thickness section for style changes
+      // Start observing the thickness section
       const thicknessSection = document.getElementById('thicknessSection');
-      observer.observe(thicknessSection, { attributes: true });
-    });
-    
-    // Initialize cart count when page loads
-    document.addEventListener('DOMContentLoaded', function() {
+      if (thicknessSection) {
+        observer.observe(thicknessSection, { attributes: true });
+      }
+      
+      // Update cart count when page loads
       updateCartCount();
     });
   </script>
