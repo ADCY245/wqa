@@ -290,14 +290,14 @@
                                             </div>
                                             
                                             <!-- Discount -->
-                                            <div class="price-row text-danger">
+                                            <div class="price-row text-danger discount-row" {% if not item.discount_percent or item.discount_percent <= 0 %}style="display: none;"{% endif %}>
                                                 <span class="price-label">Discount (<span class="discount-percent">{{ item.discount_percent|default(0) }}</span>%):</span>
-                                                <span class="price-value">- ₹<span class="discount-amount">0.00</span></span>
+                                                <span class="price-value">- ₹<span class="discount-amount">{{ "%.2f"|format((item.unit_price|default(0) * item.quantity|default(1) * item.discount_percent|default(0)) / 100) }}</span></span>
                                             </div>
                                             
-                                            <div class="price-row">
+                                            <div class="price-row after-discount-row" {% if not item.discount_percent or item.discount_percent <= 0 %}style="display: none;"{% endif %}>
                                                 <span class="price-label">After Discount:</span>
-                                                <span class="price-value">₹<span class="after-discount">0.00</span></span>
+                                                <span class="price-value">₹<span class="after-discount">{{ "%.2f"|format((item.unit_price|default(0) * item.quantity|default(1)) * (1 - (item.discount_percent|default(0) / 100))) }}</span></span>
                                             </div>
                                             
                                             <!-- GST -->
