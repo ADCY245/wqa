@@ -107,27 +107,50 @@
                 select.trigger('change');
             }
             
-            // Handle company selection
-            select.on('change', function() {
-                const selectedValue = $(this).val();
-                productTypeSelect.disabled = !selectedValue;
-                
-                if (selectedValue) {
-                    // Store the selected company in localStorage
-                    localStorage.setItem('selectedCompany', selectedValue);
-                    
-                    // Find the selected company's data
-                    const selectedCompany = companiesData.find(c => c['Company Name'] === selectedValue);
-                    if (selectedCompany && selectedCompany['EmailID']) {
-                        localStorage.setItem('selectedCompanyEmail', selectedCompany['EmailID']);
-                    }
+            // Function to update cart link with company info
+            function updateCartLink(company) {
+                if (company && company.name && company.email) {
+                    const cartLink = document.getElementById('cartLink');
+                    const baseUrl = cartLink.getAttribute('href').split('?')[0];
+                    cartLink.href = `${baseUrl}?company=${encodeURIComponent(company.name)}&email=${encodeURIComponent(company.email)}`;
                 }
+            }
+            
+            // When a company is selected, enable the product type dropdown
+            select.on('select2:select', function(e) {
+                productTypeSelect.disabled = false;
+                
+                // Store the selected company in localStorage
+                const selectedCompany = {
+                    name: e.params.data.text,
+                    email: e.params.data.email
+                };
+                localStorage.setItem('selectedCompany', JSON.stringify(selectedCompany));
+                
+                // Update the product type links to include company info
+                const companyParam = `?company=${encodeURIComponent(selectedCompany.name)}&email=${encodeURIComponent(selectedCompany.email)}`;
+                document.querySelectorAll('#productTypeSelect option').forEach(option => {
+                    if (option.value) {
+                        option.value = option.value.split('?')[0] + companyParam;
+                    }
+                });
+                
+                // Update cart link
+                updateCartLink(selectedCompany);
             });
             
-            // Restore selected company if exists
+            // Restore cart link and selected company from localStorage on page load
             const savedCompany = localStorage.getItem('selectedCompany');
             if (savedCompany) {
-                select.val(savedCompany).trigger('change');
+                try {
+                    const company = JSON.parse(savedCompany);
+                    updateCartLink(company);
+                    select.val(company.name).trigger('change');
+                } catch (e) {
+                    console.error('Error parsing saved company:', e);
+                    // If parsing fails, try to just set the value directly
+                    select.val(savedCompany).trigger('change');
+                }
             }
         });
     </script>
@@ -136,7 +159,7 @@
     <div class="container">
         <!-- Cart icon aligned right -->
         <div style="text-align: right; margin-top: 10px; margin-bottom: 10px; position: relative;">
-            <a href="{{ url_for('cart') }}" style="position: relative; display: inline-block;">
+            <a href="{{ url_for('cart') }}" id="cartLink" style="position: relative; display: inline-block;">
                 <img src="{{ url_for('static', filename='images/cart-icon.png') }}" alt="Cart" style="width: 40px; height: 40px;" />
                 <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
             </a>
