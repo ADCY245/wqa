@@ -135,24 +135,29 @@
       const sizeSelect = document.getElementById('sizeSelect');
       const sizeSuggestions = document.getElementById('sizeSuggestions');
       
+      if (!sizeInput || !sizeSelect) return;
+      
       // Function to update the hidden select and trigger change
       function selectSize(value, text) {
         if (sizeSelect) {
           // Update the hidden select
           sizeSelect.value = value;
-          // Trigger change event
-          const event = new Event('change');
-          sizeSelect.dispatchEvent(event);
           // Update the input field
           sizeInput.value = text;
           // Hide suggestions
           sizeSuggestions.style.display = 'none';
+          
+          // Trigger change event after a small delay to ensure the value is set
+          setTimeout(() => {
+            const event = new Event('change');
+            sizeSelect.dispatchEvent(event);
+          }, 10);
         }
       }
       
-      // Handle input changes
-      sizeInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
+      // Function to update suggestions
+      function updateSuggestions() {
+        const searchTerm = sizeInput.value.toLowerCase();
         const options = Array.from(sizeSelect.options);
         
         // Clear previous suggestions
@@ -188,11 +193,14 @@
           sizeSuggestions.appendChild(noResults);
           sizeSuggestions.style.display = 'block';
         }
-      });
+      }
+      
+      // Handle input changes
+      sizeInput.addEventListener('input', updateSuggestions);
       
       // Hide suggestions when clicking outside
       document.addEventListener('click', function(e) {
-        if (e.target !== sizeInput) {
+        if (e.target !== sizeInput && e.target !== sizeSuggestions) {
           sizeSuggestions.style.display = 'none';
         }
       });
@@ -207,25 +215,59 @@
           }
         }
       });
+      
+      // Watch for changes to the sizeSelect options
+      const observer = new MutationObserver(updateSuggestions);
+      observer.observe(sizeSelect, { childList: true });
+      
+      // Initial update
+      updateSuggestions();
     }
     
-    // Override the loadSizes function to initialize search after loading sizes
+    // Store the original loadSizes function
     const originalLoadSizes = window.loadSizes;
+    
+    // Override the loadSizes function to initialize search after loading sizes
     window.loadSizes = function() {
-      return originalLoadSizes.apply(this, arguments).then(() => {
-        // Initialize size search after sizes are loaded
+      // Call the original loadSizes
+      const result = originalLoadSizes.apply(this, arguments);
+      
+      // If it returns a promise (which it should)
+      if (result && typeof result.then === 'function') {
+        return result.then(() => {
+          // Initialize size search after sizes are loaded
+          initSizeSearch();
+          return true;
+        }).catch(error => {
+          console.error('Error in loadSizes:', error);
+          // Show error to user
+          const sizeInput = document.getElementById('sizeInput');
+          if (sizeInput) {
+            sizeInput.placeholder = 'Error loading sizes. Please try again.';
+            sizeInput.disabled = true;
+          }
+          throw error;
+        });
+      } else {
+        // If it doesn't return a promise, just initialize the search
         initSizeSearch();
-      }).catch(error => {
-        console.error('Error in loadSizes:', error);
-        // Show error to user
-        const sizeInput = document.getElementById('sizeInput');
-        if (sizeInput) {
-          sizeInput.placeholder = 'Error loading sizes. Please try again.';
-          sizeInput.disabled = true;
-        }
-        throw error;
-      });
+        return Promise.resolve();
+      }
     };
+    
+    // Initialize the search when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set up a mutation observer to watch for the size section becoming visible
+      const sizeSection = document.getElementById('sizeSection');
+      if (sizeSection) {
+        const observer = new MutationObserver(function(mutations) {
+          if (sizeSection.style.display !== 'none') {
+            initSizeSearch();
+          }
+        });
+        observer.observe(sizeSection, { attributes: true, attributeFilter: ['style'] });
+      }
+    });
     
     // Update cart count when page loads
     document.addEventListener('DOMContentLoaded', function() {
