@@ -39,6 +39,9 @@
             const productTypeSelect = document.getElementById('productTypeSelect');
             let companiesData = [];
             
+            // Clear any existing selection
+            select.val(null).trigger('change');
+            
             // Disable product type selection until company is selected
             productTypeSelect.disabled = true;
             
@@ -161,3 +164,4 @@
     </div>
 </body>
 </html>
+
