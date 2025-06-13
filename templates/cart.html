@@ -263,24 +263,16 @@
                                      data-discount-percent="{{ item.discount_percent|default(0) }}"
                                      data-gst-percent="{{ item.gst_percent|default(18) }}">
                                     
-                                    <h5>MPack</h5>
-                                    <p class="mb-1"><strong>Product Type:</strong> Underpacking Material</p>
-                                    {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
-                                    <p class="mb-1"><strong>Thickness:</strong> {{ item.thickness|default('N/A') }}</p>
-                                    {% if item.size %}<p class="mb-1"><strong>Size:</strong> {{ item.size }}</p>{% endif %}
-                                    
-                                    <div class="price-details mt-3 p-3 bg-light rounded">
-                                        <div class="price-grid">
-                                        <!-- Remove Button -->
-                                        <div class="text-end mb-3">
-                                            <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
-                                                <input type="hidden" name="product_id" value="{{ item.id }}">
-                                                <input type="hidden" name="product_type" value="mpack">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
-                                                    <i class="fas fa-trash"></i> Remove
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h5>MPack</h5>
+                                            <p class="mb-1"><strong>Product Type:</strong> Underpacking Material</p>
+                                            {% if item.machine %}<p class="mb-1"><strong>Machine:</strong> {{ item.machine }}</p>{% endif %}
+                                            <p class="mb-1"><strong>Thickness:</strong> {{ item.thickness|default('N/A') }}</p>
+                                            {% if item.size %}<p class="mb-1"><strong>Size:</strong> {{ item.size }}</p>{% endif %}
+                                            
+                                            <div class="price-details mt-3 p-3 bg-light rounded">
+                                                <div class="price-grid">
                                         
                                         <!-- Unit Price -->
                                         <div class="price-row">
@@ -321,10 +313,22 @@
                                             <div class="price-row border-top pt-2 fw-bold">
                                                 <span>Total:</span>
                                                 <span>₹<span class="final-total">0.00</span></span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                            </div>
+                                    
+                                    <!-- Remove Button -->
+                                    <div class="col-12 mt-3 pt-3 border-top text-end">
+                                        <form action="{{ url_for('remove_from_cart') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="product_id" value="{{ item.id }}">
+                                            <input type="hidden" name="product_type" value="mpack">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove item">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             
                         {% else %}
                             <!-- Generic Product -->
