@@ -126,8 +126,14 @@
     <div class="cart-container">
         <div class="cart-header">
             <div>
-                <h2>Cart for <span id="companyName">{{ company_name }}</span></h2>
-                <p class="text-muted mb-0" id="companyEmail">@{{ company_email }}</p>
+                <h2>Cart for <span id="companyName">{{ company_name if company_name else 'Your Company' }}</span></h2>
+                {% if company_email %}
+                <a href="mailto:{{ company_email }}" id="companyEmail" class="text-muted mb-0" style="text-decoration: none;">
+                    @{{ company_email }}
+                </a>
+                {% else %}
+                <p class="text-muted mb-0" id="companyEmail">No email provided</p>
+                {% endif %}
             </div>
             <div>
                 <a href="{{ url_for('home') }}" class="btn btn-outline-secondary me-2">
