@@ -126,80 +126,53 @@
   <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
   
   <script>
-    // Function to initialize Select2 for sizes dropdown with custom matcher
+    // Function to initialize Select2 for sizes dropdown
     function initSizeSelect2() {
       const sizeSelect = $('#sizeSelect');
       
-      // Check if Select2 is already initialized on this element
-      if (sizeSelect.hasClass('select2-hidden-accessible')) {
-        sizeSelect.select2('destroy');
-      }
-      
-      // Custom matcher to search for number patterns in sizes
-      function matchSize(term, text) {
-        // If no search term, show all options
-        if ($.trim(term) === '') return true;
-        
-        // Extract all numbers from the search term and option text
-        const termNumbers = term.match(/\d+/g) || [];
-        const textNumbers = text.match(/\d+/g) || [];
-        
-        // If no numbers in search term, do normal text search
-        if (termNumbers.length === 0) {
-          return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;
+      // Get all available size options
+      const sizeOptions = [];
+      sizeSelect.find('option').each(function() {
+        if (this.value) {  // Skip the default/empty option
+          sizeOptions.push({
+            id: this.value,
+            text: this.text
+          });
         }
-        
-        // Check if all number groups in the search term appear in order in the option text
-        let lastIndex = -1;
-        for (let i = 0; i < termNumbers.length; i++) {
-          const num = termNumbers[i];
-          const index = text.toUpperCase().indexOf(num.toUpperCase(), lastIndex + 1);
-          if (index === -1) return false;
-          lastIndex = index;
-        }
-        
-        return true;
-      }
+      });
       
-      // Initialize Select2 with custom matcher
+      // Store the original options for later use
+      sizeSelect.data('sizes', sizeOptions);
+      
+      // Clear the select (keeping the first empty option)
+      sizeSelect.empty().append('<option value="">-- Type to search size --</option>');
+      
+      // Initialize Select2 with the size options
       sizeSelect.select2({
         theme: 'bootstrap-5',
-        placeholder: 'Type to search size (e.g., 260, 35, 26x35, etc.)',
+        placeholder: 'Type to search for a size',
         allowClear: true,
         width: '100%',
         dropdownAutoWidth: true,
-        minimumInputLength: 0,
-        matcher: function(params, data) {
-          // Always return the object if there is are no search terms
-          if ($.trim(params.term) === '') {
-            return data;
-          }
-          
-          // Check if the text contains the search term
-          if (matchSize(params.term, data.text)) {
-            return data;
-          }
-          
-          // Check if the text contains the search term when split by non-word characters
-          const terms = params.term.split(/\s+/);
-          for (let i = 0; i < terms.length; i++) {
-            if (!matchSize(terms[i], data.text)) {
-              return null;
-            }
-          }
-          
-          return data;
-        },
+        minimumInputLength: 1,
+        data: sizeOptions,
         language: {
           noResults: function() {
             return 'No matching sizes found';
           },
-          inputTooShort: function() {
-            return 'Type to search sizes (e.g., 26, 35, 26x35, etc.)';
-          },
           searching: function() {
             return 'Searching...';
+          },
+          inputTooShort: function(args) {
+            return 'Please enter ' + args.minimum + ' or more characters';
           }
+        },
+        templateResult: function(result) {
+          if (!result.id) return result.text;
+          return $('<span>').text(result.text);
+        },
+        templateSelection: function(selected) {
+          return selected.text || 'Select a size';
         }
       });
       
