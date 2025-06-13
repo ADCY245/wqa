@@ -111,22 +111,46 @@
             function updateCartLink(company) {
                 try {
                     const cartLink = document.getElementById('cartLink');
-                    if (!cartLink) return;
+                    if (!cartLink) return false;
                     
-                    const baseUrl = cartLink.getAttribute('href').split('?')[0];
+                    // If no company provided, try to get from localStorage
+                    if (!company) {
+                        const savedCompany = localStorage.getItem('selectedCompany');
+                        if (savedCompany) {
+                            try {
+                                company = JSON.parse(savedCompany);
+                            } catch (e) {
+                                console.error('Error parsing saved company:', e);
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+                    
+                    const baseUrl = "{{ url_for('cart') }}";
                     const params = new URLSearchParams();
                     
-                    // Always include company name and email, even if empty
-                    params.append('company', company?.name || '');
-                    params.append('email', company?.email || '');
+                    // Add company info to URL parameters
+                    if (company.name) params.append('company', company.name);
+                    if (company.email) params.append('email', company.email);
                     
                     // Update the cart link
                     const newHref = `${baseUrl}?${params.toString()}`;
                     cartLink.href = newHref;
                     console.log('Updated cart link to:', newHref);
                     
+                    // If this was called from a click, navigate to the cart
+                    if (window.event) {
+                        window.event.preventDefault();
+                        window.location.href = newHref;
+                        return false;
+                    }
+                    
+                    return true;
                 } catch (e) {
                     console.error('Error updating cart link:', e);
+                    return false;
                 }
             }
             
@@ -184,7 +208,7 @@
     <div class="container">
         <!-- Cart icon aligned right -->
         <div style="text-align: right; margin-top: 10px; margin-bottom: 10px; position: relative;">
-            <a href="{{ url_for('cart') }}" id="cartLink" style="position: relative; display: inline-block;">
+            <a href="#" id="cartLink" style="position: relative; display: inline-block;" onclick="event.preventDefault(); updateCartLink();">
                 <img src="{{ url_for('static', filename='images/cart-icon.png') }}" alt="Cart" style="width: 40px; height: 40px;" />
                 <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
             </a>
@@ -203,7 +227,7 @@
         <h2 class="mb-4">Select Product Type</h2>
         
         <div class="mb-3">
-            <select id="productTypeSelect" class="form-select" onchange="if(this.value) { localStorage.setItem('selectedCompany', document.getElementById('companySelect').value); window.location.href=this.value; }" disabled>
+            <select id="productTypeSelect" class="form-select" onchange="if(this.value) { updateCartLink(); window.location.href=this.value; }" disabled>
                 <option value="">-- Select Type --</option>
                 <option value="{{ url_for('blankets') }}">Blanket</option>
                 <option value="{{ url_for('mpack') }}">Underpacking</option>
